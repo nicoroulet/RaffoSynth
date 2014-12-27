@@ -10,7 +10,7 @@
 @prefix pprops <http://lv2plug.in/ns/ext/port-props#>
 
 <http://example.org/moog>
-	a lv2:Plugin, lv2:Synth ;
+	a lv2:Plugin, lv2:InstrumentPlugin ;
 	doap:name "Moog Synth" ;
 	doap:license <http://opensource.org/licenses/isc> ;
 	lv2:port [
@@ -23,14 +23,8 @@
   [
     a lv2:AudioPort, lv2:OutputPort;
     lv2:index 1;
-    lv2:symbol "left";
-    lv2:name "Left";
-  ],
-  [
-    a lv2:AudioPort, lv2:OutputPort;
-    lv2:index 2;
-    lv2:symbol "right";
-    lv2:name "Right";
+    lv2:symbol "output";
+    lv2:name "Output";
   ],
   
   [
