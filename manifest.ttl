@@ -4,5 +4,5 @@
 
 <http://example.org/moog> #hay que ver que dominio ponerle (nongnu.org?)
 	a lv2:Plugin ;
-	lv2:binary <moog@LIB_EXT@> ;
+	lv2:binary <moog.so> ;
 	rdfs:seeAlso <moog.ttl> .
