@@ -9,9 +9,9 @@ class MoogSynthGUI : public LV2::GUI<MoogSynthGUI> {
 public:
   
 	MoogSynthGUI(const std::string& URI) {
-		Table* interfaz = manage(new Table(1, 3)); // tabla que contiene toda la interfaz
+		Table* interfaz = manage(new Table(1, 4)); // tabla que contiene toda la interfaz
 		Table* osciladores = manage(new Table(5, 4)); // subtablas
-		Table* postprocesos = manage(new Table(8, 3));
+		Table* modificadores = manage(new Table(8, 3));
 		Table* params = manage(new Table(4,1));
 		
 		osciladores->attach(*manage(new Label("Range")), 1, 2, 0, 1);
@@ -27,9 +27,9 @@ public:
 			wave[i] = manage(new HScale(m_ports[m_wave0 + i].min, m_ports[m_wave0+i].max, 1));
 			vol[i] = manage(new HScale(m_ports[m_vol0 + i].min, m_ports[m_vol0+i].max, 0.01));
 			
-			range[i]->set_size_request(100, -1);
-			wave[i]->set_size_request(100, -1);
-			vol[i]->set_size_request(100, -1);
+			range[i]->set_size_request(100, 50);
+			wave[i]->set_size_request(100, 50);
+			vol[i]->set_size_request(100, 50);
 			
 			range[i]->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &MoogSynthGUI::write_control), m_range0 + i), mem_fun(*range[i], &HScale::get_value)));
 		 	
@@ -37,21 +37,21 @@ public:
 			
 			vol[i]->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &MoogSynthGUI::write_control), m_vol0 + i), mem_fun(*vol[i], &HScale::get_value)));
 			
-			osciladores->attach(*range[i], 1, 2, 1 + i*2, 2 + i*2);
-			osciladores->attach(*wave[i], 2, 3, 1 + i*2, 2 + i*2);
-			osciladores->attach(*vol[i], 3, 4, 1 + i*2, 2 + i*2);
+			osciladores->attach(*range[i], 1, 2, 1 + i, 2 + i);
+			osciladores->attach(*wave[i], 2, 3, 1 + i, 2 + i);
+			osciladores->attach(*vol[i], 3, 4, 1 + i, 2 + i);
 			   	
 		}
 		
-		postprocesos->attach(*manage(new Label("Filter")), 0, 3, 0, 1);
-		postprocesos->attach(*manage(new Label("Cutoff")), 0, 1, 1, 2);
-		postprocesos->attach(*manage(new Label("Attack")), 0, 1, 3, 4);
-		postprocesos->attach(*manage(new Label("Decay")), 1, 2, 3, 4);
-		postprocesos->attach(*manage(new Label("Sustain")), 2, 3, 3, 4);
-		postprocesos->attach(*manage(new Label("Loudness")), 0, 3, 5, 6);
-		postprocesos->attach(*manage(new Label("Attack")), 0, 1, 6, 7);
-		postprocesos->attach(*manage(new Label("Decay")), 1, 2, 6, 7);
-		postprocesos->attach(*manage(new Label("Sustain")), 2, 3, 6, 7);
+		modificadores->attach(*manage(new Label("Filter")), 0, 3, 0, 1);
+		modificadores->attach(*manage(new Label("Cutoff")), 0, 1, 1, 2);
+		modificadores->attach(*manage(new Label("Attack")), 0, 1, 3, 4);
+		modificadores->attach(*manage(new Label("Decay")), 1, 2, 3, 4);
+		modificadores->attach(*manage(new Label("Sustain")), 2, 3, 3, 4);
+		modificadores->attach(*manage(new Label("Loudness")), 0, 3, 5, 6);
+		modificadores->attach(*manage(new Label("Attack")), 0, 1, 6, 7);
+		modificadores->attach(*manage(new Label("Decay")), 1, 2, 6, 7);
+		modificadores->attach(*manage(new Label("Sustain")), 2, 3, 6, 7);
 		
 		filter_cutoff = manage(new HScale(m_ports[m_filter_cutoff].min, m_ports[m_filter_cutoff].max, 0.01));
 		filter_attack = manage(new HScale(m_ports[m_filter_attack].min, m_ports[m_filter_attack].max, 0.01));
@@ -79,27 +79,135 @@ public:
 		decay->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &MoogSynthGUI::write_control), m_decay), mem_fun(*decay, &HScale::get_value)));
 		sustain->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &MoogSynthGUI::write_control), m_sustain), mem_fun(*sustain, &HScale::get_value)));
 		
-		postprocesos->attach(*filter_cutoff, 2, 3, 0, 1);
-		postprocesos->attach(*filter_attack, 4, 5, 0, 1);
-		postprocesos->attach(*filter_decay, 4, 5, 1, 2);
-		postprocesos->attach(*filter_sustain, 4, 5, 2, 3);
-		postprocesos->attach(*attack, 7, 8, 0, 1);
-		postprocesos->attach(*decay, 7, 8, 1, 2);
-		postprocesos->attach(*sustain, 7, 8, 2, 3);
+		modificadores->attach(*filter_cutoff, 0, 1, 2, 3);
+		modificadores->attach(*filter_attack, 0, 1, 4, 5);
+		modificadores->attach(*filter_decay, 1, 2, 4, 5);
+		modificadores->attach(*filter_sustain, 2, 3, 4, 5);
+		modificadores->attach(*attack, 0, 1, 7, 8);
+		modificadores->attach(*decay, 1, 2, 7, 8);
+		modificadores->attach(*sustain, 2, 3, 7, 8);
 		
-		/* falta params */
 		
-		interfaz->attach(*osciladores, 0, 1, 0, 1);
-		interfaz->attach(*postprocesos, 0, 1, 1, 2);
+		glide = manage(new VScale(m_ports[m_glide].min, m_ports[m_glide].max, 0.01));
+		glide->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &MoogSynthGUI::write_control), m_glide), mem_fun(*glide, &HScale::get_value)));
+		glide->set_inverted(true);
+		
+		volume = manage(new VScale(m_ports[m_volume].min, m_ports[m_volume].max, 0.01));
+		volume->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &MoogSynthGUI::write_control), m_volume), mem_fun(*volume, &HScale::get_value)));
+		volume->set_inverted(true);
+		
+		Frame* f_glide = new Frame("Glide");
+		f_glide->add(*glide);
+		Frame* f_osc = new Frame("Oscillators");
+		f_osc->add(*osciladores);
+		Frame* f_mod = new Frame("Modifiers");
+		f_mod->add(*modificadores);
+		Frame* f_vol = new Frame("Volume");
+		f_vol->add(*volume);
+		
+		interfaz->attach(*f_glide, 0, 1, 0, 1);
+		interfaz->attach(*f_osc, 1, 2, 0, 1);
+		interfaz->attach(*f_mod, 2, 3, 0, 1);
+		interfaz->attach(*f_vol, 3, 4, 0, 1);
+		
+		
+		
+		add(*interfaz);
 	}
     
-  /*
+  
 	void port_event(uint32_t port, uint32_t buffer_size, uint32_t format, const void* buffer) {
-		if (port == p_width)
-			w_scale->set_value(*static_cast<const float*>(buffer));
-		else if (port == p_balance)
-			b_scale->set_value(*static_cast<const float*>(buffer));
-	}*/
+		switch (port) {
+			case (m_wave0): {
+				wave[0]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_wave1):{
+				wave[1]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_wave2):{
+				wave[2]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_wave3):{
+				wave[3]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_range0): {
+				range[0]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_range1): {
+				range[1]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_range2): {
+				range[2]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_range3): {
+				range[3]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_vol0): {
+				vol[0]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_vol1): {
+				vol[1]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_vol2): {
+				vol[2]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_vol3): {
+				vol[3]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_attack): {
+				attack->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_decay): {
+				decay->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_sustain): {
+				sustain->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			/*case (m_release): {
+				vol[3]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}*/
+			case (m_filter_cutoff): {
+				filter_cutoff->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_filter_attack): {
+				filter_attack->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_filter_decay): {
+				filter_decay->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_filter_sustain): {
+				filter_sustain->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_volume): {
+				volume->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_glide): {
+				glide->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+		}
+	}
 
 	protected:
 
@@ -117,7 +225,10 @@ public:
 		HScale* attack;
 		HScale* decay;
 		HScale* sustain;
-
+		
+		VScale* glide;
+		VScale* volume;
+		
 	};
 
 

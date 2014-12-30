@@ -21,7 +21,10 @@ protected:
 
 class MoogSynth : public LV2::Synth<MoogSound, MoogSynth> {
 public:
-	//MoogSynth(double rate){}
+	MoogSynth(double rate): 
+		LV2::Synth<MoogSound, MoogSynth>(m_n_ports, m_midi) 
+		
+		 {}
 };
 
-//static int _ = MoogSynth::register_class(m_uri);
+static int _ = MoogSynth::register_class(m_uri);

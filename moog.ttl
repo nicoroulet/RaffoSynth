@@ -23,7 +23,7 @@
 	doap:name "Moog Synth";
 	doap:license <http://opensource.org/licenses/isc>;
 	ll:pegName "m";
-	guiext:ui <http://ll-plugins.nongnu.org/lv2/lv2pftci/stereopanner/gui>;
+	guiext:ui <http://example.org/moog/gui>;
 
 	lv2:port [
 		a ev:EventPort, lv2:InputPort;
