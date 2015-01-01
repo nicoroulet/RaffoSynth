@@ -7,12 +7,17 @@ using namespace Gtk;
 
 class MoogSynthGUI : public LV2::GUI<MoogSynthGUI> {
 public:
-  
+  	
+  	
+  	
 	MoogSynthGUI(const std::string& URI) {
 		Table* interfaz = manage(new Table(1, 4)); // tabla que contiene toda la interfaz
 		Table* osciladores = manage(new Table(5, 4)); // subtablas
 		Table* modificadores = manage(new Table(8, 3));
 		Table* params = manage(new Table(4,1));
+		
+		interfaz->set_border_width(12);
+		interfaz->set_spacings(6);
 		
 		osciladores->attach(*manage(new Label("Range")), 1, 2, 0, 1);
 		osciladores->attach(*manage(new Label("Waveform")), 2, 3, 0, 1);
@@ -33,9 +38,11 @@ public:
 			
 			range[i]->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &MoogSynthGUI::write_control), m_range0 + i), mem_fun(*range[i], &HScale::get_value)));
 		 	
-			wave[i]->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &MoogSynthGUI::write_control), m_wave0 + i), mem_fun(*wave[i], &HScale::get_value)));    	
+			wave[i]->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &MoogSynthGUI::write_control), m_wave0 + i), mem_fun(*wave[i], &HScale::get_value)));
 			
 			vol[i]->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &MoogSynthGUI::write_control), m_vol0 + i), mem_fun(*vol[i], &HScale::get_value)));
+			
+			//range[i]->set_draw_value(false);
 			
 			osciladores->attach(*range[i], 1, 2, 1 + i, 2 + i);
 			osciladores->attach(*wave[i], 2, 3, 1 + i, 2 + i);
@@ -105,14 +112,46 @@ public:
 		Frame* f_vol = new Frame("Volume");
 		f_vol->add(*volume);
 		
+		Gdk::Color wood;
+		wood.set_rgb(2000, 1000, 500);
+		
+		Gdk::Color black;
+		black.set_rgb(60000, 60000, 60000);
+		
+		
+		/*
+		Gdk::Color text;
+		text.set_red(60000);
+		text.set_green(60000);
+		text.set_blue(60000);
+		*/
+		f_glide->modify_bg(STATE_NORMAL, black);
+		f_osc->modify_bg(STATE_NORMAL, black);
+		f_mod->modify_bg(STATE_NORMAL, black);
+		f_vol->modify_bg(STATE_NORMAL, black);
+		
+		/*Image* bg_img = new Image("Wood-Texture.jpg");
+		Gdk::Pixbuf* bg_img = Gdk::Pixbuf::create_from_file("Wood-Texture.jpg");
+		interfaz->attach(manage(*bg_img));
+		*/
+
 		interfaz->attach(*f_glide, 0, 1, 0, 1);
 		interfaz->attach(*f_osc, 1, 2, 0, 1);
 		interfaz->attach(*f_mod, 2, 3, 0, 1);
 		interfaz->attach(*f_vol, 3, 4, 0, 1);
 		
+		EventBox* fondo = new EventBox();
+		fondo->modify_bg(STATE_NORMAL, wood);
 		
+		//fondo->add_pixlabel("Wood-Texture.jpg", "bg_image", 0);
+		fondo->add(*interfaz);		
+		add(*fondo);
 		
-		add(*interfaz);
+		// tocar midi con el teclado
+//		grab_focus();
+//		signal_key_pressed_event().connect(mem_fun(*this, gtk_main_quit),);
+		
+
 	}
     
   
@@ -228,6 +267,10 @@ public:
 		
 		VScale* glide;
 		VScale* volume;
+		
+		//static char* format_value(GtkScale *scale, int value){
+         //   return str("-->%d<--", value);}
+
 		
 	};
 

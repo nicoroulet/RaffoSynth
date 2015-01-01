@@ -59,7 +59,7 @@
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 2;
 	lv2:minimum 0;
-	lv2:maximum 3;
+	lv2:maximum 4;
 	lv2:scalePoint [ rdf:value 0; rdfs:label "saw" ];
 	lv2:scalePoint [ rdf:value 1; rdfs:label "triangle" ];
 	lv2:scalePoint [ rdf:value 2; rdfs:label "square" ];
@@ -74,7 +74,7 @@
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 2;
 	lv2:minimum 0;
-	lv2:maximum 3;
+	lv2:maximum 4;
 	lv2:scalePoint [ rdf:value 0; rdfs:label "saw" ];
 	lv2:scalePoint [ rdf:value 1; rdfs:label "triangle" ];
 	lv2:scalePoint [ rdf:value 2; rdfs:label "square" ];
@@ -89,7 +89,7 @@
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 0;
 	lv2:minimum 0;
-	lv2:maximum 3;
+	lv2:maximum 4;
 	lv2:scalePoint [ rdf:value 0; rdfs:label "saw" ];
 	lv2:scalePoint [ rdf:value 1; rdfs:label "triangle" ];
 	lv2:scalePoint [ rdf:value 2; rdfs:label "square" ];
@@ -104,7 +104,7 @@
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 3;
 	lv2:minimum 0;
-	lv2:maximum 3;
+	lv2:maximum 4;
 	lv2:scalePoint [ rdf:value 0; rdfs:label "saw" ];
 	lv2:scalePoint [ rdf:value 1; rdfs:label "triangle" ];
 	lv2:scalePoint [ rdf:value 2; rdfs:label "square" ];
@@ -121,7 +121,7 @@
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 2;
 	lv2:minimum 0;
-	lv2:maximum 4;
+	lv2:maximum 5;
 	lv2:scalePoint [ rdf:value 0; rdfs:label "32'" ];
 	lv2:scalePoint [ rdf:value 1; rdfs:label "16'" ];
 	lv2:scalePoint [ rdf:value 2; rdfs:label "8'" ];
@@ -137,7 +137,7 @@
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 2;
 	lv2:minimum 0;
-	lv2:maximum 4;
+	lv2:maximum 5;
 	lv2:scalePoint [ rdf:value 0; rdfs:label "32'" ];
 	lv2:scalePoint [ rdf:value 1; rdfs:label "16'" ];
 	lv2:scalePoint [ rdf:value 2; rdfs:label "8'" ];
@@ -153,7 +153,7 @@
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 2;
 	lv2:minimum 0;
-	lv2:maximum 4;
+	lv2:maximum 5;
 	lv2:scalePoint [ rdf:value 0; rdfs:label "32'" ];
 	lv2:scalePoint [ rdf:value 1; rdfs:label "16'" ];
 	lv2:scalePoint [ rdf:value 2; rdfs:label "8'" ];
@@ -169,7 +169,7 @@
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 2;
 	lv2:minimum 0;
-	lv2:maximum 4;
+	lv2:maximum 5;
 	lv2:scalePoint [ rdf:value 0; rdfs:label "32'" ];
 	lv2:scalePoint [ rdf:value 1; rdfs:label "16'" ];
 	lv2:scalePoint [ rdf:value 2; rdfs:label "8'" ];
