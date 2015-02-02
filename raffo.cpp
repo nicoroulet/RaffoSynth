@@ -41,7 +41,7 @@ public:
 		Parent(m_n_ports),
 		sample_rate(rate),
 		key(INVALID_KEY),
-		period(1),
+		period(500),
 		counter(0)
 		{
 		 midi_type = Parent::uri_to_id(LV2_EVENT_URI, "http://lv2plug.in/ns/ext/midi#MidiEvent"); 
@@ -50,7 +50,7 @@ public:
 		 
   void render(uint32_t from, uint32_t to) {
     if (key == INVALID_KEY) return;
-    for (uint32_t i = from; i < to; ++i) p(m_output)[i] = (i%500) / 500.;
+    for (uint32_t i = from; i < to; ++i) p(m_output)[i] = (i%period) / (float)period;
   }
   
 	void handle_midi(uint32_t size, unsigned char* data) {
