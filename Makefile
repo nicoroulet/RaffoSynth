@@ -1,4 +1,4 @@
-NAME = moog
+NAME = raffo
 BUNDLE = $(NAME).lv2
 INSTALL_DIR = /usr/local/lib/lv2
 

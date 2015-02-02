@@ -112,27 +112,29 @@ public:
 		Frame* f_vol = new Frame("Volume");
 		f_vol->add(*volume);
 		
+		/*
 		Gdk::Color wood;
 		wood.set_rgb(2000, 1000, 500);
 		
 		Gdk::Color black;
 		black.set_rgb(60000, 60000, 60000);
 		
-		
-		/*
 		Gdk::Color text;
 		text.set_red(60000);
 		text.set_green(60000);
 		text.set_blue(60000);
-		*/
+
 		f_glide->modify_bg(STATE_NORMAL, black);
 		f_osc->modify_bg(STATE_NORMAL, black);
 		f_mod->modify_bg(STATE_NORMAL, black);
 		f_vol->modify_bg(STATE_NORMAL, black);
-		
-		/*Image* bg_img = new Image("Wood-Texture.jpg");
-		Gdk::Pixbuf* bg_img = Gdk::Pixbuf::create_from_file("Wood-Texture.jpg");
-		interfaz->attach(manage(*bg_img));
+		*/
+
+		/*
+		Image* bg_img = new Image("Wood-Texture.jpg");
+		Glib::RefPtr<Gdk::Pixbuf> bg_pixbuf;
+		bg_pixbuf = Gdk::Pixbuf::create_from_file("Wood-Texture.jpg");
+		interfaz->attach(manage(bg_pixbuf));
 		*/
 
 		interfaz->attach(*f_glide, 0, 1, 0, 1);
@@ -140,16 +142,13 @@ public:
 		interfaz->attach(*f_mod, 2, 3, 0, 1);
 		interfaz->attach(*f_vol, 3, 4, 0, 1);
 		
+		/*
 		EventBox* fondo = new EventBox();
 		fondo->modify_bg(STATE_NORMAL, wood);
-		
-		//fondo->add_pixlabel("Wood-Texture.jpg", "bg_image", 0);
-		fondo->add(*interfaz);		
+		fondo->add_pixlabel("Wood-Texture.jpg", "bg_image", 0);
 		add(*fondo);
-		
-		// tocar midi con el teclado
-//		grab_focus();
-//		signal_key_pressed_event().connect(mem_fun(*this, gtk_main_quit),);
+		*/
+		add(*interfaz);		
 		
 
 	}
