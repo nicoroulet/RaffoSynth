@@ -4,6 +4,7 @@
 #include <lv2_event_helpers.h>
 #include <lv2_uri_map.h>
 #include <lv2types.hpp>
+#include <stdlib.h>
 
 #include <iostream>
 
@@ -50,7 +51,42 @@ public:
 		 
   void render(uint32_t from, uint32_t to) {
     if (key == INVALID_KEY) return;
-    for (uint32_t i = from; i < to; ++i) p(m_output)[i] = (i%period) / (float)period;
+    
+    // buffer en 0
+    for (uint32_t i = from; i < to; ++i) p(m_output)[i] = 0;
+    
+    // osciladores
+	int subcounter;
+	for (int osc = 0; osc < 4; osc++) {    
+		subcounter = counter;
+		float vol = *p(m_vol0 + osc) / 10.;
+		int subperiod = period / pow(2, *p(m_range0 + osc)); // periodo efectivo del oscilador
+		
+		switch ((int)*p(m_wave0 + osc)) {
+			case (0): { //triangular
+				for (uint32_t i = from; i < to; ++i && subcounter++) 
+					p(m_output)[i] += vol * (4. * (fabs(((subcounter+subperiod/4)%subperiod) / (float)subperiod - .5)-.25));
+				break;
+			}
+			case (1): { //sierra
+				for (uint32_t i = from; i < to; ++i && subcounter++) 
+					p(m_output)[i] += vol * (2. * (subcounter%subperiod) / (float)subperiod - 1);
+				break;
+			}
+			case (2): { //cuadrada
+				for (uint32_t i = from; i < to; ++i && subcounter++) 
+					p(m_output)[i] += vol * (2. * (((subcounter%subperiod) / (float)subperiod - .5) < 0)-1);
+				break;
+			}
+			case (3): { //pulso
+				for (uint32_t i = from; i < to; ++i && subcounter++) 
+					p(m_output)[i] += vol * (2. * (((subcounter%subperiod) / (float)subperiod - .2) < 0)-1);
+				break;
+			}
+			
+		}
+    }
+    counter += to  	- from;
   }
   
 	void handle_midi(uint32_t size, unsigned char* data) {
@@ -59,12 +95,13 @@ public:
 		    case (0x90): { // note on
 			    key = data[1];
 			    period = sample_rate / key2hz(key);
+			    counter=0;
 			    break;
 		    }
 		    case (0x80): { // note off
 			    if (key == data[1])
 			      key = INVALID_KEY;
-			    break;			    
+			    break;
 		    }
 		    case (0xE0): { // pitch bend
 		      /* Calculamos el factor de pitch (numero por el que multiplicar 
