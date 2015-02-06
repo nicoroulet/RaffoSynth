@@ -28,7 +28,7 @@ protected:
 	unsigned char key;
 	uint32_t period;
 	uint32_t counter;
-	//float m_envelope;
+	int envelope_count;
 	float modwheel;
 	float pitch;
 	float pitch_width; // esto lo ponemos aca o en la gui?
@@ -57,44 +57,76 @@ public:
     
     // osciladores
 	int subcounter;
+	int envelope_subcount;
 	for (int osc = 0; osc < 4; osc++) {    
 		subcounter = counter;
-		float vol = *p(m_vol0 + osc) / 10.;
+		envelope_subcount = envelope_count;
+		float vol = pow(*p(m_volume) * *p(m_vol0 + osc) / 100., 2); // el volumen es el cuadrado de la amplitud
 		int subperiod = period / pow(2, *p(m_range0 + osc)); // periodo efectivo del oscilador
+		
+		// valores precalculados para el envelope
+		// la función de envelope es:
+			// f(t) = s - (1-s)/(2*d) * (t-a-d-|t-a-d|) + (1/(2*a) + (1-s)/(2*d)) * (t-a-|t-a|)
+			/*
+              /\
+             /  \
+          	/    \_______________  -> s = sustain level
+           /  
+          /
+          |-a-|-d-|--------------|
+			*/
+		float a = *p(m_attack)*100 + .1;
+		float d = *p(m_decay)*100 + .1;
+		float s = pow(*p(m_sustain),2);
+		float c1 = (1.-s)/(2.*d);
+		float c2 = 1./(2.*a);
+
 		
 		switch ((int)*p(m_wave0 + osc)) {
 			case (0): { //triangular
-				for (uint32_t i = from; i < to; ++i && subcounter++) 
-					p(m_output)[i] += vol * (4. * (fabs(((subcounter+subperiod/4)%subperiod) / (float)subperiod - .5)-.25));
+				for (uint32_t i = from; i < to; ++i && subcounter++ && envelope_subcount++) 
+					p(m_output)[i] += vol * (4. * (fabs(((subcounter + subperiod/4) % subperiod) /
+					                  (float)subperiod - .5)-.25)) * 
+					                  (s - c1 * (envelope_subcount - a - d - fabs(envelope_subcount - a - d)) + 
+					                  (c2 + c1) * (envelope_subcount - a - fabs(envelope_subcount - a))) ;
 				break;
 			}
 			case (1): { //sierra
-				for (uint32_t i = from; i < to; ++i && subcounter++) 
-					p(m_output)[i] += vol * (2. * (subcounter%subperiod) / (float)subperiod - 1);
+				for (uint32_t i = from; i < to; ++i && subcounter++ && envelope_subcount++) 
+					p(m_output)[i] += vol * (2. * (subcounter%subperiod) / (float)subperiod - 1) * 
+					                  (s - c1 * (envelope_subcount - a - d - fabs(envelope_subcount - a - d)) + 
+					                  (c2 + c1) * (envelope_subcount - a - fabs(envelope_subcount - a))) ;
 				break;
 			}
 			case (2): { //cuadrada
-				for (uint32_t i = from; i < to; ++i && subcounter++) 
-					p(m_output)[i] += vol * (2. * (((subcounter%subperiod) / (float)subperiod - .5) < 0)-1);
+				for (uint32_t i = from; i < to; ++i && subcounter++ && envelope_subcount++) 
+					p(m_output)[i] += vol * (2. * (((subcounter%subperiod) / (float)subperiod - .5) < 0)-1) * 
+					                  (s - c1 * (envelope_subcount - a - d - fabs(envelope_subcount - a - d)) + 
+					                  (c2 + c1) * (envelope_subcount - a - fabs(envelope_subcount - a))) ;
 				break;
 			}
 			case (3): { //pulso
-				for (uint32_t i = from; i < to; ++i && subcounter++) 
-					p(m_output)[i] += vol * (2. * (((subcounter%subperiod) / (float)subperiod - .2) < 0)-1);
+				for (uint32_t i = from; i < to; ++i && subcounter++ && envelope_subcount++) 
+					p(m_output)[i] += vol * (2. * (((subcounter%subperiod) / (float)subperiod - .2) < 0)-1) * 
+					                  (s - c1 * (envelope_subcount - a - d - fabs(envelope_subcount - a - d)) + 
+					                  (c2 + c1) * (envelope_subcount - a - fabs(envelope_subcount - a))) ;
 				break;
 			}
 			
 		}
     }
-    counter += to  	- from;
+    counter += to - from;
+    envelope_count += to - from;
   }
   
 	void handle_midi(uint32_t size, unsigned char* data) {
 	  if (size == 3) {
 		  switch (data[0]) {
 		    case (0x90): { // note on
+			    if (key == INVALID_KEY) 
+			    	envelope_count = 0;
 			    key = data[1];
-			    period = sample_rate / key2hz(key);
+			    period = sample_rate * 4 / key2hz(key);
 			    counter=0;
 			    break;
 		    }
