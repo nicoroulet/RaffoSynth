@@ -28,6 +28,7 @@ protected:
 	unsigned char key;
 	uint32_t period;
 	uint32_t counter;
+	uint32_t subcounter;
 	int envelope_count;
 	float modwheel;
 	float pitch;
@@ -43,7 +44,9 @@ public:
 		sample_rate(rate),
 		key(INVALID_KEY),
 		period(500),
-		counter(0)
+		counter(0),
+		pitch(1),
+		pitch_width(12)
 		{
 		 midi_type = Parent::uri_to_id(LV2_EVENT_URI, "http://lv2plug.in/ns/ext/midi#MidiEvent"); 
 		}
@@ -56,7 +59,6 @@ public:
     for (uint32_t i = from; i < to; ++i) p(m_output)[i] = 0;
     
     // osciladores
-	int subcounter;
 	int envelope_subcount;
 	for (int osc = 0; osc < 4; osc++) {    
 		subcounter = counter;
@@ -89,11 +91,12 @@ public:
 					                  (float)subperiod - .5)-.25)) * 
 					                  (s - c1 * (envelope_subcount - a - d - fabs(envelope_subcount - a - d)) + 
 					                  (c2 + c1) * (envelope_subcount - a - fabs(envelope_subcount - a))) ;
+				// zapato: la onda triangular esta hecha para que empiece continua, pero cuando se corta popea
 				break;
 			}
 			case (1): { //sierra
 				for (uint32_t i = from; i < to; ++i && subcounter++ && envelope_subcount++) 
-					p(m_output)[i] += vol * (2. * (subcounter%subperiod) / (float)subperiod - 1) * 
+					p(m_output)[i] += vol * (2. * ((int)(subcounter * pitch) % subperiod) / (float)subperiod - 1) * 
 					                  (s - c1 * (envelope_subcount - a - d - fabs(envelope_subcount - a - d)) + 
 					                  (c2 + c1) * (envelope_subcount - a - fabs(envelope_subcount - a))) ;
 				break;
@@ -115,7 +118,7 @@ public:
 			
 		}
     }
-    counter += to - from;
+    counter = subcounter;
     envelope_count += to - from;
   }
   
@@ -136,6 +139,7 @@ public:
 			    break;
 		    }
 		    case (0xE0): { // pitch bend
+		      subcounter = subcounter % period;
 		      /* Calculamos el factor de pitch (numero por el que multiplicar 
 		         la frecuencia fundamental). data[2] es el byte mas significativo, 
 		         data[1] el menos. El primer bit de ambos es 0, por eso << 7. 
