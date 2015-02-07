@@ -6,11 +6,11 @@
 #include <lv2types.hpp>
 #include <stdlib.h>
 
+#include <list>
 #include <iostream>
 
 using namespace std;
 
-static const unsigned char INVALID_KEY = 255;
 
 static inline float key2hz(unsigned char key) {
   return 8.1758 * pow(1.0594, key);
@@ -25,7 +25,7 @@ protected:
   }*/
   
 	double sample_rate;
-	unsigned char key;
+	list<unsigned char> keys;
 	uint32_t period;
 	uint32_t counter;
 	uint32_t subcounter;
@@ -42,7 +42,6 @@ public:
 	RaffoSynth(double rate): 
 		Parent(m_n_ports),
 		sample_rate(rate),
-		key(INVALID_KEY),
 		period(500),
 		counter(0),
 		pitch(1),
@@ -53,7 +52,7 @@ public:
 		 
 		 
   void render(uint32_t from, uint32_t to) {
-    if (key == INVALID_KEY) return;
+    if (keys.empty()) return;
     
     // buffer en 0
     for (uint32_t i = from; i < to; ++i) p(m_output)[i] = 0;
@@ -126,20 +125,20 @@ public:
 	  if (size == 3) {
 		  switch (data[0]) {
 		    case (0x90): { // note on
-			    if (key == INVALID_KEY) 
+			    if (keys.empty()) 
 			    	envelope_count = 0;
-			    key = data[1];
-			    period = sample_rate * 4 / key2hz(key);
+			    keys.push_front(data[1]);
+			    period = sample_rate * 4 / key2hz(data[1]);
 			    counter=0;
 			    break;
 		    }
 		    case (0x80): { // note off
-			    if (key == data[1])
-			      key = INVALID_KEY;
+		    	keys.remove(data[1]);
+		    	period = sample_rate * 4 / key2hz(keys.front());
 			    break;
 		    }
 		    case (0xE0): { // pitch bend
-		      subcounter = subcounter % period;
+		      subcounter = subcounter % period; // para evitar clips
 		      /* Calculamos el factor de pitch (numero por el que multiplicar 
 		         la frecuencia fundamental). data[2] es el byte mas significativo, 
 		         data[1] el menos. El primer bit de ambos es 0, por eso << 7. 
@@ -154,7 +153,9 @@ public:
   } /*handle_midi*/
   
   void run(uint32_t sample_count) {
-
+		/*pitch += 0.001;
+		subcounter = subcounter % period;
+		*/
     LV2_Event_Iterator iter;
     lv2_event_begin(&iter, reinterpret_cast<LV2_Event_Buffer*&>(Parent::m_ports[m_midi]));
 
