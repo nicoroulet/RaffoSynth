@@ -7,7 +7,10 @@ using namespace Gtk;
 
 class RaffoSynthGUI : public LV2::GUI<RaffoSynthGUI> {
 public:
-  	
+
+	void oscButtonClick0(){
+		
+	}
   	
   	
 	RaffoSynthGUI(const std::string& URI) {
@@ -16,7 +19,7 @@ public:
 		Table* modificadores = manage(new Table(8, 3));
 		Table* params = manage(new Table(4,1));
 		
-		interfaz->set_border_width(12);
+		interfaz->set_border_width(16);
 		interfaz->set_spacings(6);
 		
 		osciladores->attach(*manage(new Label("Range")), 1, 2, 0, 1);
@@ -44,11 +47,18 @@ public:
 			
 			//range[i]->set_draw_value(false);
 			
+
 			osciladores->attach(*range[i], 1, 2, 1 + i, 2 + i);
 			osciladores->attach(*wave[i], 2, 3, 1 + i, 2 + i);
-			osciladores->attach(*vol[i], 3, 4, 1 + i, 2 + i);
-			   	
+			osciladores->attach(*vol[i], 3, 4, 1 + i, 2 + i);			   	
 		}
+
+		//Los 4 botones on/off de los osciladores
+		//(Quedaron afuera del for porque el connect no lograba aceptar parametros)
+		oscButton[0] = manage(new Button("On/Off"));
+		oscButton[0]->signal_clicked().connect(sigc::mem_fun(*this, &RaffoSynthGUI::oscButtonClick0));
+		osciladores->attach(*oscButton[0], 4, 5, 1+0, 2+0);
+
 		
 		modificadores->attach(*manage(new Label("Filter")), 0, 3, 0, 1);
 		modificadores->attach(*manage(new Label("Cutoff")), 0, 1, 1, 2);
@@ -148,12 +158,10 @@ public:
 		fondo->add_pixlabel("Wood-Texture.jpg", "bg_image", 0);
 		add(*fondo);
 		*/
-		add(*interfaz);		
-		
-
+		add(*interfaz);
 	}
     
-  
+  	
 	void port_event(uint32_t port, uint32_t buffer_size, uint32_t format, const void* buffer) {
 		switch (port) {
 			case (m_wave0): {
@@ -244,10 +252,25 @@ public:
 				glide->set_value(*static_cast<const float*>(buffer));
 				break;
 			}
+
+			//El buffer transmitirá 1 si está prendido y 0 si no?
+			/*case (oscButton0): {
+				oscButton[0]->set_value(*static_cast<const float*>(buffer));
+			}
+			case (oscButton1): {
+				oscButton[0]->set_value(*static_cast<const float*>(buffer));
+			}
+			case (oscButton2): {
+				oscButton[0]->set_value(*static_cast<const float*>(buffer));
+			}
+			case (oscButton3): {
+				oscButton[0]->set_value(*static_cast<const float*>(buffer));
+			}*/
 		}
 	}
-
 	protected:
+
+		Button* oscButton[4];
 
 		HScale* range[4];
 
