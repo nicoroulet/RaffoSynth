@@ -87,65 +87,67 @@ public:
     
     // osciladores
     int envelope_subcount;
-    for (int osc = 0; osc < 4; osc++) {    
-      envelope_subcount = envelope_count;
-      float vol = pow(*p(m_volume) * *p(m_vol0 + osc) / 100., 2); // el volumen es el cuadrado de la amplitud
-      float subperiod = glide_period / (pow(2, *p(m_range0 + osc)) * pitch); // periodo efectivo del oscilador
-    
-      // valores precalculados para el envelope
-      // la función de envelope es:
-        // f(t) = s - (1-s)/(2*d) * (t-a-d-|t-a-d|) + (1/(2*a) + (1-s)/(2*d)) * (t-a-|t-a|)
-        /*
-              /\
-             /  \
-            /    \_______________  -> s = sustain level
-           /  
-          /
-          |-a-|-d-|--------------|
-        */
-      float a = *p(m_attack)*100 + .1;
-      float d = *p(m_decay)*100 + .1;
-      float s = pow(*p(m_sustain),2);
-      float c1 = (1.-s)/(2.*d);
-      float c2 = 1./(2.*a);
+    for (int osc = 0; osc < 4; osc++) {
+			if (*p(m_oscButton0 + osc) == 1){	//Si el botón del oscilador está en 1, se ejecuta render
+				envelope_subcount = envelope_count;
+	      float vol = pow(*p(m_volume) * *p(m_vol0 + osc) / 100., 2); // el volumen es el cuadrado de la amplitud
+	      float subperiod = glide_period / (pow(2, *p(m_range0 + osc)) * pitch); // periodo efectivo del oscilador
+	    
+	      // valores precalculados para el envelope
+	      // la función de envelope es:
+	        // f(t) = s - (1-s)/(2*d) * (t-a-d-|t-a-d|) + (1/(2*a) + (1-s)/(2*d)) * (t-a-|t-a|)
+	        /*
+	              /\
+	             /  \
+	            /    \_______________  -> s = sustain level
+	           /  
+	          /
+	          |-a-|-d-|--------------|
+	        */
+	      float a = *p(m_attack)*100 + .1;
+	      float d = *p(m_decay)*100 + .1;
+	      float s = pow(*p(m_sustain),2);
+	      float c1 = (1.-s)/(2.*d);
+	      float c2 = 1./(2.*a);
 
-      counter = last_val * glide_period + 1;
-      
-      switch ((int)*p(m_wave0 + osc)) {
-        case (0): { //triangular
-          for (uint32_t i = from; i < to; ++i && counter++ && envelope_subcount++) {
-            p(m_output)[i] += vol * (4. * (fabs(fmod(((counter) + subperiod/4.), subperiod) /
-                              subperiod - .5)-.25)) * 
-                              envelope(envelope_count, a, d, s, c1, c2);
-          }
-          // zapato: la onda triangular esta hecha para que empiece continua, pero cuando se corta popea
-          break;
-        }
-        case (1): { //sierra
-          for (uint32_t i = from; i < to; ++i && counter++ && envelope_subcount++) {
-            p(m_output)[i] += vol * (2. * fmod(counter, subperiod) / subperiod - 1) * 
-                              envelope(envelope_count, a, d, s, c1, c2);
-          
-          }
-          break;
-        }
-        case (2): { //cuadrada
-          for (uint32_t i = from; i < to; ++i && counter++ && envelope_subcount++) {
-            p(m_output)[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .5) < 0)-1) * 
-                              envelope(envelope_count, a, d, s, c1, c2);
-          }
-          break;
-        }
-        case (3): { //pulso
-          for (uint32_t i = from; i < to; ++i && counter++ && envelope_subcount++) {
-            p(m_output)[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .2) < 0)-1) * 
-                              envelope(envelope_count, a, d, s, c1, c2);
-          }
-          break;
-        }
-      
-      }
-    }
+	      counter = last_val * glide_period + 1;
+	      
+	      switch ((int)*p(m_wave0 + osc)) {
+	        case (0): { //triangular
+	          for (uint32_t i = from; i < to; ++i && counter++ && envelope_subcount++) {
+	            p(m_output)[i] += vol * (4. * (fabs(fmod(((counter) + subperiod/4.), subperiod) /
+	                              subperiod - .5)-.25)) * 
+	                              envelope(envelope_count, a, d, s, c1, c2);
+	          }
+	          // zapato: la onda triangular esta hecha para que empiece continua, pero cuando se corta popea
+	          break;
+	        }
+	        case (1): { //sierra
+	          for (uint32_t i = from; i < to; ++i && counter++ && envelope_subcount++) {
+	            p(m_output)[i] += vol * (2. * fmod(counter, subperiod) / subperiod - 1) * 
+	                              envelope(envelope_count, a, d, s, c1, c2);
+	          
+	          }
+	          break;
+	        }
+	        case (2): { //cuadrada
+	          for (uint32_t i = from; i < to; ++i && counter++ && envelope_subcount++) {
+	            p(m_output)[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .5) < 0)-1) * 
+	                              envelope(envelope_count, a, d, s, c1, c2);
+	          }
+	          break;
+	        }
+	        case (3): { //pulso
+	          for (uint32_t i = from; i < to; ++i && counter++ && envelope_subcount++) {
+	            p(m_output)[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .2) < 0)-1) * 
+	                              envelope(envelope_count, a, d, s, c1, c2);
+	          }
+	          break;
+	        }
+	      }
+	    }	//Fin del if
+	  }	//Fin del for
+	  
     //counter = counter % (int)glide_period;
     envelope_count += to - from;
     last_val = fmod(counter, glide_period / pitch) * pitch / glide_period; //para ajustar el enganche de la onda entre corridas de la funcion
@@ -219,4 +221,3 @@ public:
 };
 
 static int _ = RaffoSynth::register_class(m_uri);
-
