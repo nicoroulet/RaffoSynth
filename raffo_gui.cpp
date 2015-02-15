@@ -34,10 +34,12 @@ public:
 			range[i] = manage(new HScale(m_ports[m_range0 + i].min, m_ports[m_range0+i].max, 1));
 			wave[i] = manage(new HScale(m_ports[m_wave0 + i].min, m_ports[m_wave0+i].max, 1));
 			vol[i] = manage(new HScale(m_ports[m_vol0 + i].min, m_ports[m_vol0+i].max, 0.01));
+			oscButton[i] = manage(new VScale(m_ports[m_oscButton0 + i].min, m_ports[m_oscButton0+i].max, 1));
 			
 			range[i]->set_size_request(100, 50);
 			wave[i]->set_size_request(100, 50);
 			vol[i]->set_size_request(100, 50);
+			oscButton[i]->set_size_request(100, 50);
 			
 			range[i]->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_range0 + i), mem_fun(*range[i], &HScale::get_value)));
 		 	
@@ -45,19 +47,16 @@ public:
 			
 			vol[i]->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_vol0 + i), mem_fun(*vol[i], &HScale::get_value)));
 			
+			oscButton[i]->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_oscButton0 + i), mem_fun(*oscButton[i], &VScale::get_value)));
+
 			//range[i]->set_draw_value(false);
 			
 
 			osciladores->attach(*range[i], 1, 2, 1 + i, 2 + i);
 			osciladores->attach(*wave[i], 2, 3, 1 + i, 2 + i);
 			osciladores->attach(*vol[i], 3, 4, 1 + i, 2 + i);			   	
+			osciladores->attach(*oscButton[i], 4, 5, 1 + i, 2 + i);			   				   	
 		}
-
-		//Los 4 botones on/off de los osciladores
-		//(Quedaron afuera del for porque el connect no lograba aceptar parametros)
-		oscButton[0] = manage(new Button("On/Off"));
-		oscButton[0]->signal_clicked().connect(sigc::mem_fun(*this, &RaffoSynthGUI::oscButtonClick0));
-		osciladores->attach(*oscButton[0], 4, 5, 1+0, 2+0);
 
 		
 		modificadores->attach(*manage(new Label("Filter")), 0, 3, 0, 1);
@@ -252,25 +251,27 @@ public:
 				glide->set_value(*static_cast<const float*>(buffer));
 				break;
 			}
-
-			//El buffer transmitirá 1 si está prendido y 0 si no?
-			/*case (oscButton0): {
+			case (m_oscButton0): {
 				oscButton[0]->set_value(*static_cast<const float*>(buffer));
+				break;
 			}
-			case (oscButton1): {
-				oscButton[0]->set_value(*static_cast<const float*>(buffer));
+			case (m_oscButton1): {
+				oscButton[1]->set_value(*static_cast<const float*>(buffer));
+				break;
 			}
-			case (oscButton2): {
-				oscButton[0]->set_value(*static_cast<const float*>(buffer));
+			case (m_oscButton2): {
+				oscButton[2]->set_value(*static_cast<const float*>(buffer));
+				break;
 			}
-			case (oscButton3): {
-				oscButton[0]->set_value(*static_cast<const float*>(buffer));
-			}*/
+			case (m_oscButton3): {
+				oscButton[3]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
 		}
 	}
 	protected:
 
-		Button* oscButton[4];
+		VScale* oscButton[4];
 
 		HScale* range[4];
 
