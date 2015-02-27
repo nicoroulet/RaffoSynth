@@ -91,7 +91,7 @@ public:
 			if (*p(m_oscButton0 + osc) == 1){	//Si el botón del oscilador está en 1, se ejecuta render
 				envelope_subcount = envelope_count;
 	      float vol = pow(*p(m_volume) * *p(m_vol0 + osc) / 100., 2); // el volumen es el cuadrado de la amplitud
-	      float subperiod = glide_period / (pow(2, *p(m_range0 + osc)) * pitch); // periodo efectivo del oscilador
+	      float subperiod = glide_period / (pow(2, *p(m_range0 + osc))  * pitch); // periodo efectivo del oscilador
 	    
 	      // valores precalculados para el envelope
 	      // la función de envelope es:
@@ -150,7 +150,7 @@ public:
 	  
     //counter = counter % (int)glide_period;
     envelope_count += to - from;
-    last_val = fmod(counter, glide_period / pitch) * pitch / glide_period; //para ajustar el enganche de la onda entre corridas de la funcion
+    last_val = fmod(counter, glide_period / pitch) / glide_period; //para ajustar el enganche de la onda entre corridas de la funcion
   }
   
   void handle_midi(uint32_t size, unsigned char* data) {
