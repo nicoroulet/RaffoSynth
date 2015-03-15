@@ -5,9 +5,12 @@
 #include <lv2_uri_map.h>
 #include <lv2types.hpp>
 #include <stdlib.h>
+#include "fft.h"
 
 #include <list>
 #include <iostream>
+
+
 
 // cantidad maxima de samples que se procesan por llamado a render()
 // un numero mayor resulta en mejor performance, pero peor granularidad en la transición de frecuencias
@@ -53,6 +56,8 @@ protected:
   
   uint32_t midi_type;
   
+  //zapato: esto es un poco suboptimo? ocupa 16 kb que probablemente no use completos
+  float imaginarios[4096];
 
 public:
   typedef LV2::Plugin<RaffoSynth, LV2::URIMap<true> > Parent;
@@ -91,7 +96,7 @@ public:
 			if (*p(m_oscButton0 + osc) == 1){	//Si el botón del oscilador está en 1, se ejecuta render
 				envelope_subcount = envelope_count;
 	      float vol = pow(*p(m_volume) * *p(m_vol0 + osc) / 100., 2); // el volumen es el cuadrado de la amplitud
-	      float subperiod = glide_period / (pow(2, *p(m_range0 + osc))  * pitch); // periodo efectivo del oscilador
+	      float subperiod = glide_period / ((*p(m_range0 + osc)+1)  * pitch); // periodo efectivo del oscilador
 	    
 	      // valores precalculados para el envelope
 	      // la función de envelope es:
@@ -159,16 +164,16 @@ public:
         case (0x90): { // note on
           if (keys.empty()) {
             envelope_count = 0;
-            glide_period = sample_rate * 4 / key2hz(data[1]);
+            glide_period = sample_rate * 2 / key2hz(data[1]);
             counter = 0;
           }
           keys.push_front(data[1]);
-          period = sample_rate * 4 / key2hz(data[1]);
+          period = sample_rate * 2 / key2hz(data[1]);
           break;
         }
         case (0x80): { // note off
           keys.remove(data[1]);
-          period = sample_rate * 4 / key2hz(keys.front());
+          period = sample_rate * 2 / key2hz(keys.front());
           break;
         }
         case (0xE0): { // pitch bend
@@ -188,6 +193,8 @@ public:
     /*pitch += 0.001;
     counter = counter % period;
     */
+    //if (sample_count&(sample_count-1)) cout << "Sample count no es potencia de 2"<< endl;
+    
     LV2_Event_Iterator iter;
     lv2_event_begin(&iter, reinterpret_cast<LV2_Event_Buffer*&>(Parent::m_ports[m_midi]));
 
@@ -216,6 +223,14 @@ public:
           static_cast<RaffoSynth*>(this)->handle_midi(ev->size, event_data);
       }
     }
+    /*
+    // EQ (fourier)
+    for (int i=0; i < 4096; i++) imaginarios[i] = 0;
+    fft(p(m_output), &imaginarios[0], sample_count, 1);
+    fft(p(m_output), &imaginarios[0], sample_count, -1);
+    for (int i=0; i < 256	; i++) cout << p(m_output)[i];
+    //for (int i=0; i < 50; i++) p(m_output)[i] = 0;
+    */
   } /*run*/
   
 };

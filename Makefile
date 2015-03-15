@@ -1,6 +1,7 @@
 NAME = raffo
 BUNDLE = $(NAME).lv2
 INSTALL_DIR = /usr/local/lib/lv2
+FLAGS = -O2
 
 
 $(BUNDLE): manifest.ttl $(NAME).ttl $(NAME).so $(NAME)_gui.so
@@ -8,8 +9,8 @@ $(BUNDLE): manifest.ttl $(NAME).ttl $(NAME).so $(NAME)_gui.so
 	mkdir $(BUNDLE)
 	cp $^ $(BUNDLE)
 
-$(NAME).so: $(NAME).cpp $(NAME).peg
-	g++ -shared -fPIC -DPIC $(NAME).cpp `pkg-config --cflags --libs lv2-plugin` -o $(NAME).so
+$(NAME).so: $(NAME).cpp $(NAME).peg fft.h
+	g++ -shared -fPIC -DPIC $(FLAGS) $(NAME).cpp `pkg-config --cflags --libs lv2-plugin` -o $(NAME).so
 
 $(NAME)_gui.so: $(NAME)_gui.cpp $(NAME).peg
 	g++ -shared -fPIC -DPIC $(NAME)_gui.cpp `pkg-config --cflags --libs lv2-gui` -o $(NAME)_gui.so
