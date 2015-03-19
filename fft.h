@@ -15,8 +15,8 @@ void fft(float* reales, float* imaginarios, int n, int isign) {
       SWAP(reales[i], reales[j]);
       SWAP(imaginarios[i], imaginarios[j]);
     }
-    m=n;
-    while (m >= 1 && j > m) {
+    m = n >> 1;
+    while (m >= 1 && j >= m) {
       j -= m;
       m >>= 1;
     }
@@ -25,16 +25,16 @@ void fft(float* reales, float* imaginarios, int n, int isign) {
   
   // fourier propiamente dicho
   mmax = 1;
-  while (n >= mmax) {
+  while (n > mmax) {
     istep=mmax << 1;
-		theta=isign*6.28318530717959/mmax;
+		theta=isign*(6.28318530717959/istep);
 		wtemp=sin(0.5*theta);
 		wpr = -2.0*wtemp*wtemp;
 		wpi=sin(theta);
 		wr=1.0;
 		wi=0.0;
 		for (m=0;m<mmax;m++) {
-			for (i=m;i<=n;i+=istep) {
+			for (i=m;i<n;i+=istep) {
 				j=i+mmax;
 				tempr=wr*reales[j]-wi*imaginarios[j];
 				tempi=wr*imaginarios[j]+wi*reales[j];

@@ -43,10 +43,14 @@ protected:
   
   
   double sample_rate;
+  double dt; // (1/sample_rate)
   list<unsigned char> keys;
   uint32_t period; // periodo de la nota presionada
   float glide_period; // periodo que se esta reproduciendo
+  
   float last_val;
+  float pre_buf_end; // el valor del ultimo sample del buffer anterior
+  
   uint32_t counter;
   int envelope_count;
   float modwheel;
@@ -65,6 +69,7 @@ public:
   RaffoSynth(double rate): 
     Parent(m_n_ports),
     sample_rate(rate),
+    dt(1./rate),
     period(500),
     counter(0),
     pitch(1)
@@ -95,7 +100,7 @@ public:
     for (int osc = 0; osc < 4; osc++) {
 			if (*p(m_oscButton0 + osc) == 1){	//Si el botón del oscilador está en 1, se ejecuta render
 				envelope_subcount = envelope_count;
-	      float vol = pow(*p(m_volume) * *p(m_vol0 + osc) / 100., 2); // el volumen es el cuadrado de la amplitud
+	      float vol = pow(*p(m_volume) * *p(m_vol0 + osc) / 200., 2); // el volumen es el cuadrado de la amplitud
 	      float subperiod = glide_period / ((*p(m_range0 + osc)+1)  * pitch); // periodo efectivo del oscilador
 	    
 	      // valores precalculados para el envelope
@@ -223,12 +228,29 @@ public:
           static_cast<RaffoSynth*>(this)->handle_midi(ev->size, event_data);
       }
     }
+    
+    
+    // EQ 
+    //impulse response: http://en.wikipedia.org/wiki/Low-pass_filter#Discrete-time_realization
+    
+    float a = dt / ((*p(m_filter_cutoff)-10)/100000. + dt);
+    cout << a << endl;
+    
+    p(m_output)[0] *= a;
+    p(m_output)[0] += (1-a) * pre_buf_end;
+    
+    for (int i=1; i<sample_count; i++) {
+      p(m_output)[i] *= a;
+      p(m_output)[i] += (1-a) * p(m_output)[i-1];
+    }
+    pre_buf_end = p(m_output)[sample_count-1];
+    
     /*
-    // EQ (fourier)
+    //(fourier)
     for (int i=0; i < 4096; i++) imaginarios[i] = 0;
     fft(p(m_output), &imaginarios[0], sample_count, 1);
     fft(p(m_output), &imaginarios[0], sample_count, -1);
-    for (int i=0; i < 256	; i++) cout << p(m_output)[i];
+    for (int i=0; i < sample_count; i++) p(m_output)[i] /= sample_count;//cout << p(m_output)[i] << " ";;
     //for (int i=0; i < 50; i++) p(m_output)[i] = 0;
     */
   } /*run*/
