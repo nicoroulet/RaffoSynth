@@ -55,7 +55,7 @@
 	lv2:index 3;
 	lv2:symbol "wave0";
 	lv2:name "Waveform Osc0";
-	lv2:portProperty epp:hasStrictBounds;
+	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 2;
 	lv2:minimum 0;
@@ -70,7 +70,7 @@
 	lv2:index 4;
 	lv2:symbol "wave1";
 	lv2:name "Waveform Osc1";
-	lv2:portProperty epp:hasStrictBounds;
+	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 2;
 	lv2:minimum 0;
@@ -85,7 +85,7 @@
 	lv2:index 5;
 	lv2:symbol "wave2";
 	lv2:name "Waveform Osc2";
-	lv2:portProperty epp:hasStrictBounds;
+	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 0;
 	lv2:minimum 0;
@@ -100,7 +100,7 @@
 	lv2:index 6;
 	lv2:symbol "wave3";
 	lv2:name "Waveform Osc3";
-	lv2:portProperty epp:hasStrictBounds;
+	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 3;
 	lv2:minimum 0;
@@ -117,7 +117,7 @@
 	lv2:index 7;
 	lv2:symbol "range0";
 	lv2:name "Range Osc0";
-	lv2:portProperty epp:hasStrictBounds;
+	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 2;
 	lv2:minimum 0;
@@ -133,7 +133,7 @@
 	lv2:index 8;
 	lv2:symbol "range1";
 	lv2:name "Range Osc1";
-	lv2:portProperty epp:hasStrictBounds;
+	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 2;
 	lv2:minimum 0;
@@ -149,7 +149,7 @@
 	lv2:index 9;
 	lv2:symbol "range2";
 	lv2:name "Range Osc2";
-	lv2:portProperty epp:hasStrictBounds;
+	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 2;
 	lv2:minimum 0;
@@ -165,7 +165,7 @@
 	lv2:index 10;
 	lv2:symbol "range3";
 	lv2:name "Range Osc3";
-	lv2:portProperty epp:hasStrictBounds;
+	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 2;
 	lv2:minimum 0;
@@ -259,10 +259,10 @@
 	lv2:index 19;
 	lv2:symbol "filter_cutoff";
 	lv2:name "Cutoff";
-	lv2:minimum 10; 
-	lv2:maximum 100.01;
+	lv2:minimum 500; 
+	lv2:maximum 10000.02;
 	lv2:default 50;
-	lv2:PortProperty pprops:logarithmic;
+	#lv2:PortProperty pprops:logarithmic;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -307,7 +307,7 @@
 	lv2:index 24;
 	lv2:symbol "oscButton0";
 	lv2:name "Button Osc0";
-	lv2:portProperty epp:hasStrictBounds;
+	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 1;
 	lv2:minimum 0;
@@ -321,7 +321,7 @@
 	lv2:index 25;
 	lv2:symbol "oscButton1";
 	lv2:name "Button Osc1";
-	lv2:portProperty epp:hasStrictBounds;
+	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 0;
 	lv2:minimum 0;
@@ -335,7 +335,7 @@
 	lv2:index 26;
 	lv2:symbol "oscButton2";
 	lv2:name "Button Osc2";
-	lv2:portProperty epp:hasStrictBounds;
+	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 0;
 	lv2:minimum 0;
@@ -349,7 +349,7 @@
 	lv2:index 27;
 	lv2:symbol "oscButton3";
 	lv2:name "Button Osc3";
-	lv2:portProperty epp:hasStrictBounds;
+	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 0;
 	lv2:minimum 0;

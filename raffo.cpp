@@ -233,8 +233,8 @@ public:
     // EQ 
     //impulse response: http://en.wikipedia.org/wiki/Low-pass_filter#Discrete-time_realization
     
-    float a = dt / ((*p(m_filter_cutoff)-10)/100000. + dt);
-    cout << a << endl;
+    float a = dt / (1./(6.28318530717959 * (*p(m_filter_cutoff))) + dt);
+    //cout << (*p(m_filter_cutoff)) << endl;
     
     p(m_output)[0] *= a;
     p(m_output)[0] += (1-a) * pre_buf_end;
