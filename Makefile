@@ -9,7 +9,7 @@ $(BUNDLE): manifest.ttl $(NAME).ttl $(NAME).so $(NAME)_gui.so
 	mkdir $(BUNDLE)
 	cp $^ $(BUNDLE)
 
-$(NAME).so: $(NAME).cpp $(NAME).peg fft.h
+$(NAME).so: $(NAME).cpp $(NAME).peg $(NAME).h fft.h
 	g++ -shared -fPIC -DPIC $(FLAGS) $(NAME).cpp `pkg-config --cflags --libs lv2-plugin` -o $(NAME).so
 
 $(NAME)_gui.so: $(NAME)_gui.cpp $(NAME).peg
