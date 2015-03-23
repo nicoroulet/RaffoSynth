@@ -35,6 +35,7 @@ public:
 			wave[i] = manage(new HScale(m_ports[m_wave0 + i].min, m_ports[m_wave0+i].max, 1));
 			vol[i] = manage(new HScale(m_ports[m_vol0 + i].min, m_ports[m_vol0+i].max, 0.01));
 			oscButton[i] = manage(new VScale(m_ports[m_oscButton0 + i].min, m_ports[m_oscButton0+i].max, 1));
+			oscButton[i]->set_inverted(true);
 			
 			range[i]->set_size_request(100, 50);
 			wave[i]->set_size_request(100, 50);
@@ -61,6 +62,7 @@ public:
 		
 		modificadores->attach(*manage(new Label("Filter")), 0, 3, 0, 1);
 		modificadores->attach(*manage(new Label("Cutoff")), 0, 1, 1, 2);
+		modificadores->attach(*manage(new Label("Resonance")), 2, 3, 1, 2);
 		modificadores->attach(*manage(new Label("Attack")), 0, 1, 3, 4);
 		modificadores->attach(*manage(new Label("Decay")), 1, 2, 3, 4);
 		modificadores->attach(*manage(new Label("Sustain")), 2, 3, 3, 4);
@@ -73,6 +75,8 @@ public:
 		filter_attack = manage(new HScale(m_ports[m_filter_attack].min, m_ports[m_filter_attack].max, 0.01));
 		filter_decay = manage(new HScale(m_ports[m_filter_decay].min, m_ports[m_filter_decay].max, 0.01));
 		filter_sustain = manage(new HScale(m_ports[m_filter_sustain].min, m_ports[m_filter_sustain].max, 0.01));
+		filter_resonance = manage(new HScale(m_ports[m_filter_resonance].min, m_ports[m_filter_resonance].max, 0.01));
+
 		attack = manage(new HScale(m_ports[m_attack].min, m_ports[m_attack].max, 0.01));
 		decay = manage(new HScale(m_ports[m_decay].min, m_ports[m_decay].max, 0.01));
 		sustain = manage(new HScale(m_ports[m_sustain].min, m_ports[m_sustain].max, 0.01));
@@ -83,6 +87,8 @@ public:
 		filter_attack->set_size_request(100, -1);
 		filter_decay->set_size_request(100, -1);
 		filter_sustain->set_size_request(100, -1);
+		filter_resonance->set_size_request(100, -1);
+
 		attack->set_size_request(100, -1);
 		decay->set_size_request(100, -1);
 		sustain->set_size_request(100, -1);
@@ -91,6 +97,8 @@ public:
 		filter_attack->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_filter_attack), mem_fun(*filter_attack, &HScale::get_value)));
 		filter_decay->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_filter_decay), mem_fun(*filter_decay, &HScale::get_value)));
 		filter_sustain->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_filter_sustain), mem_fun(*filter_sustain, &HScale::get_value)));
+		filter_resonance->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_filter_resonance), mem_fun(*filter_resonance, &HScale::get_value)));
+
 		attack->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_attack), mem_fun(*attack, &HScale::get_value)));
 		decay->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_decay), mem_fun(*decay, &HScale::get_value)));
 		sustain->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_sustain), mem_fun(*sustain, &HScale::get_value)));
@@ -99,6 +107,8 @@ public:
 		modificadores->attach(*filter_attack, 0, 1, 4, 5);
 		modificadores->attach(*filter_decay, 1, 2, 4, 5);
 		modificadores->attach(*filter_sustain, 2, 3, 4, 5);
+		modificadores->attach(*filter_resonance, 2, 3, 2, 3);
+
 		modificadores->attach(*attack, 0, 1, 7, 8);
 		modificadores->attach(*decay, 1, 2, 7, 8);
 		modificadores->attach(*sustain, 2, 3, 7, 8);
@@ -243,6 +253,10 @@ public:
 				filter_sustain->set_value(*static_cast<const float*>(buffer));
 				break;
 			}
+			case (m_filter_resonance): {
+				filter_resonance->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
 			case (m_volume): {
 				volume->set_value(*static_cast<const float*>(buffer));
 				break;
@@ -283,6 +297,8 @@ public:
 		HScale* filter_attack;
 		HScale* filter_decay;
 		HScale* filter_sustain;
+		HScale* filter_resonance;
+
 
 		HScale* attack;
 		HScale* decay;

@@ -356,4 +356,13 @@
 	lv2:maximum 2;
 	lv2:scalePoint [ rdf:value 0; rdfs:label "Off" ];
 	lv2:scalePoint [ rdf:value 1; rdfs:label "On" ];
+  ],
+  [
+	a lv2:ControlPort, lv2:InputPort;
+	lv2:index 28;
+	lv2:symbol "filter_resonance";
+	lv2:name "Resonance";
+	lv2:minimum 0; 
+	lv2:maximum 1000.01;
+	lv2:default 0;
   ].
