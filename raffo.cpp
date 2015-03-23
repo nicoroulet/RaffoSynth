@@ -71,7 +71,7 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
           for (uint32_t i = from; i < to; ++i && counter++ && envelope_subcount++) {
             p(m_output)[i] += vol * (4. * (fabs(fmod(((counter) + subperiod/4.), subperiod) /
                               subperiod - .5)-.25)) * 
-                              envelope(envelope_count, a, d, s, c1, c2);
+                              envelope(envelope_subcount, a, d, s, c1, c2);
           }
           // zapato: la onda triangular esta hecha para que empiece continua, pero cuando se corta popea
           break;
@@ -79,7 +79,7 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
         case (1): { //sierra
           for (uint32_t i = from; i < to; ++i && counter++ && envelope_subcount++) {
             p(m_output)[i] += vol * (2. * fmod(counter, subperiod) / subperiod - 1) * 
-                              envelope(envelope_count, a, d, s, c1, c2);
+                              envelope(envelope_subcount, a, d, s, c1, c2);
           
           }
           break;
@@ -87,14 +87,14 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
         case (2): { //cuadrada
           for (uint32_t i = from; i < to; ++i && counter++ && envelope_subcount++) {
             p(m_output)[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .5) < 0)-1) * 
-                              envelope(envelope_count, a, d, s, c1, c2);
+                              envelope(envelope_subcount, a, d, s, c1, c2);
           }
           break;
         }
         case (3): { //pulso
           for (uint32_t i = from; i < to; ++i && counter++ && envelope_subcount++) {
             p(m_output)[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .2) < 0)-1) * 
-                              envelope(envelope_count, a, d, s, c1, c2);
+                              envelope(envelope_subcount, a, d, s, c1, c2);
           }
           break;
         }
@@ -212,7 +212,8 @@ void RaffoSynth::ir(int sample_count) {
   float lpf_a0 = 1 + alpha;
   float lpf_a1 = - 2 * cosw0 / lpf_a0;
   float lpf_a2 = (1 - alpha) / lpf_a0;
-  float lpf_b = (1 - cosw0) / lpf_a0;
+  float lpf_b1 = (1 - cosw0) / lpf_a0;
+  float lpf_b0 = lpf_b1 / 2;
 
   float peak_a0 = 1 + alpha / gain_factor;
   float peak_a1 = -2 * cosw0 / peak_a0;
@@ -221,12 +222,14 @@ void RaffoSynth::ir(int sample_count) {
   float peak_b1 = - 2 * cosw0 / peak_a0;
   float peak_b2 = (1 - alpha * gain_factor) / peak_a0;
 
-  float a1 = lpf_a1 * peak_a1;
-  float a2 = lpf_a2 * peak_a2;
-  float b0 = lpf_b / 2 * peak_b0;
-  float b1 = lpf_b * peak_b1;
-  float b2 = lpf_b / 2 * peak_b2;
+  float count = envelope_count - sample_count; 
  
+  float a = *p(m_filter_attack)*100 + .1;
+  float d = *p(m_filter_decay)*100 + .1;
+  float s = pow(*p(m_filter_sustain),2);
+  float c1 = (1.-s)/(2.*d);
+  float c2 = 1./(2.*a);
+
   for (int i = 0; i < sample_count; i++) {
     /*
       cout << temp << endl ;
@@ -235,18 +238,24 @@ void RaffoSynth::ir(int sample_count) {
       cout << " peak_a0: " << peak_a0 << " lpf_a0: " << lpf_a0 << " a1: " << a1 << " a2: " << a2 << " b0: " << b1 << " b2: " << b2 << endl;
     */
 
-    //low-pass filter
+    //low-pass filter     
+    float env = envelope(count, a, d, s, c1, c2);
     
+    //zapato: esto es para evitar que si termina una nota y empieza otra en el mismo buffer, envelope de negativo y la que termina haga ruido, pero es feo
+    if (env<0) {
+      env = 0;
+    }
+
     float temp = p(m_output)[i];
-    p(m_output)[i] *= lpf_b / 2;
-    p(m_output)[i] += lpf_b * prev_vals[1] + lpf_b / 2 * prev_vals[0] 
+    p(m_output)[i] *= lpf_b0;
+    p(m_output)[i] += lpf_b1 * prev_vals[1] + lpf_b0 * prev_vals[0] 
                     - lpf_a1 * prev_vals[3] - lpf_a2 * prev_vals[2];
     prev_vals[0] = prev_vals[1];
     prev_vals[1] = temp;
 
     
     // peaking EQ (resonance)
-    temp = p(m_output)[i];
+    float temp2 = p(m_output)[i];
 
     p(m_output)[i] *= peak_b0;
     p(m_output)[i] += peak_b1 * prev_vals[3] + peak_b2 * prev_vals[2] 
@@ -255,6 +264,12 @@ void RaffoSynth::ir(int sample_count) {
     prev_vals[3] = temp;
     prev_vals[4] = prev_vals[5];
     prev_vals[5] = p(m_output)[i];
+
+    // filter ads
+    p(m_output)[i] *= env;
+    p(m_output)[i] += (1-env) * temp;
+    count++;
+     
   }
 
 }
