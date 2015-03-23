@@ -1,9 +1,11 @@
 #include <gtkmm.h>
+#include <vector>
 #include <lv2gui.hpp>
 #include "raffo.peg"
 
 using namespace sigc;
 using namespace Gtk;
+
 
 class RaffoSynthGUI : public LV2::GUI<RaffoSynthGUI> {
 public:
@@ -32,13 +34,18 @@ public:
 		
 		for (int i=0; i<4; i++) {
 			range[i] = manage(new HScale(m_ports[m_range0 + i].min, m_ports[m_range0+i].max, 1));
+			Table* wavetable = manage(new Table(2,1));
+			wave_label[i] = manage(new Label(waveshapes[i]));
+			wavetable->attach(*wave_label[i], 0, 1, 0, 1);
 			wave[i] = manage(new HScale(m_ports[m_wave0 + i].min, m_ports[m_wave0+i].max, 1));
+			wavetable->attach(*wave[i], 0, 1, 1, 2);
 			vol[i] = manage(new HScale(m_ports[m_vol0 + i].min, m_ports[m_vol0+i].max, 0.01));
 			oscButton[i] = manage(new VScale(m_ports[m_oscButton0 + i].min, m_ports[m_oscButton0+i].max, 1));
 			oscButton[i]->set_inverted(true);
 			
 			range[i]->set_size_request(100, 50);
-			wave[i]->set_size_request(100, 50);
+			wave[i]->set_size_request(100, 30);
+			wave_label[i]->set_size_request(100, 20);
 			vol[i]->set_size_request(100, 50);
 			oscButton[i]->set_size_request(100, 50);
 			
@@ -50,11 +57,11 @@ public:
 			
 			oscButton[i]->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_oscButton0 + i), mem_fun(*oscButton[i], &VScale::get_value)));
 
-			//range[i]->set_draw_value(false);
+			wave[i]->set_draw_value(false);
 			
 
 			osciladores->attach(*range[i], 1, 2, 1 + i, 2 + i);
-			osciladores->attach(*wave[i], 2, 3, 1 + i, 2 + i);
+			osciladores->attach(*wavetable, 2, 3, 1 + i, 2 + i);
 			osciladores->attach(*vol[i], 3, 4, 1 + i, 2 + i);			   	
 			osciladores->attach(*oscButton[i], 4, 5, 1 + i, 2 + i);			   				   	
 		}
@@ -175,18 +182,22 @@ public:
 		switch (port) {
 			case (m_wave0): {
 				wave[0]->set_value(*static_cast<const float*>(buffer));
+				wave_label[0]->set_text(waveshapes[(int)wave[0]->get_value()]);
 				break;
 			}
 			case (m_wave1):{
 				wave[1]->set_value(*static_cast<const float*>(buffer));
+				wave_label[1]->set_text(waveshapes[(int)wave[1]->get_value()]);
 				break;
 			}
 			case (m_wave2):{
 				wave[2]->set_value(*static_cast<const float*>(buffer));
+				wave_label[2]->set_text(waveshapes[(int)wave[2]->get_value()]);
 				break;
 			}
 			case (m_wave3):{
 				wave[3]->set_value(*static_cast<const float*>(buffer));
+				wave_label[3]->set_text(waveshapes[(int)wave[3]->get_value()]);
 				break;
 			}
 			case (m_range0): {
@@ -291,6 +302,8 @@ public:
 
 		HScale* wave[4];
 
+		Label* wave_label[4];
+
 		HScale* vol[4];
 
 		HScale* filter_cutoff;
@@ -307,6 +320,7 @@ public:
 		VScale* glide;
 		VScale* volume;
 		
+		char* waveshapes[4] = {"Triangle", "Saw", "Square", "Pulse"};
 		//static char* format_value(GtkScale *scale, int value){
          //   return str("-->%d<--", value);}
 

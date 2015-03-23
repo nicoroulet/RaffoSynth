@@ -18,6 +18,7 @@ RaffoSynth::RaffoSynth(double rate):
   pitch(1)
   {
     midi_type = Parent::uri_to_id(LV2_EVENT_URI, "http://lv2plug.in/ns/ext/midi#MidiEvent"); 
+    prev_vals[0] = prev_vals[1] = prev_vals[2] = prev_vals[3] = prev_vals[4] = prev_vals[5] = 0;
   }
      
      
@@ -174,8 +175,9 @@ void RaffoSynth::run(uint32_t sample_count) {
   
   
   // EQ 
+  ir(sample_count);
   //impulse response: http://en.wikipedia.org/wiki/Low-pass_filter#Discrete-time_realization
-  
+  /*
   float a = dt / (1./(6.28318530717959 * (*p(m_filter_cutoff))) + dt);
   //cout << (*p(m_filter_cutoff)) << endl;
   
@@ -187,7 +189,7 @@ void RaffoSynth::run(uint32_t sample_count) {
     p(m_output)[i] += (1-a) * p(m_output)[i-1];
   }
   pre_buf_end = p(m_output)[sample_count-1];
-  
+  //*/
   /*
   //(fourier)
   for (int i=0; i < 4096; i++) imaginarios[i] = 0;
@@ -198,6 +200,63 @@ void RaffoSynth::run(uint32_t sample_count) {
   */
 } /*run*/
   
+void RaffoSynth::ir(int sample_count) {
+  // optimizar esto!!
 
+  // variables precalculadas
+  float gain_factor = pow(10., *p(m_filter_resonance)/40.);
+  float w0 = 6.28318530717959 * *p(m_filter_cutoff) / sample_rate;
+  float alpha = sin(w0)/2.; // * Q,  Q va a ser constante, por ahora = 1
+  float cosw0 = cos(w0);
 
+  float lpf_a0 = 1 + alpha;
+  float lpf_a1 = - 2 * cosw0 / lpf_a0;
+  float lpf_a2 = (1 - alpha) / lpf_a0;
+  float lpf_b = (1 - cosw0) / lpf_a0;
+
+  float peak_a0 = 1 + alpha / gain_factor;
+  float peak_a1 = -2 * cosw0 / peak_a0;
+  float peak_a2 = (1 - alpha / gain_factor) / peak_a0;
+  float peak_b0 = (1 + alpha * gain_factor) / peak_a0;
+  float peak_b1 = - 2 * cosw0 / peak_a0;
+  float peak_b2 = (1 - alpha * gain_factor) / peak_a0;
+
+  float a1 = lpf_a1 * peak_a1;
+  float a2 = lpf_a2 * peak_a2;
+  float b0 = lpf_b / 2 * peak_b0;
+  float b1 = lpf_b * peak_b1;
+  float b2 = lpf_b / 2 * peak_b2;
+ 
+  for (int i = 0; i < sample_count; i++) {
+    /*
+      cout << temp << endl ;
+      cout << prev_vals[0] << " " << prev_vals[1] << " " << prev_vals[2] << " " << prev_vals[3] << " " << endl;
+      cout << "A: " << gain_factor << " w0: " << w0 << " alpha: " << alpha << endl;
+      cout << " peak_a0: " << peak_a0 << " lpf_a0: " << lpf_a0 << " a1: " << a1 << " a2: " << a2 << " b0: " << b1 << " b2: " << b2 << endl;
+    */
+
+    //low-pass filter
+    
+    float temp = p(m_output)[i];
+    p(m_output)[i] *= lpf_b / 2;
+    p(m_output)[i] += lpf_b * prev_vals[1] + lpf_b / 2 * prev_vals[0] 
+                    - lpf_a1 * prev_vals[3] - lpf_a2 * prev_vals[2];
+    prev_vals[0] = prev_vals[1];
+    prev_vals[1] = temp;
+
+    
+    // peaking EQ (resonance)
+    temp = p(m_output)[i];
+
+    p(m_output)[i] *= peak_b0;
+    p(m_output)[i] += peak_b1 * prev_vals[3] + peak_b2 * prev_vals[2] 
+                    - peak_a1 * prev_vals[5] - peak_a2 * prev_vals[4];
+    prev_vals[2] = prev_vals[3];
+    prev_vals[3] = temp;
+    prev_vals[4] = prev_vals[5];
+    prev_vals[5] = p(m_output)[i];
+  }
+
+}
 static int _ = RaffoSynth::register_class(m_uri);
+

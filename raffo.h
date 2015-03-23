@@ -23,6 +23,7 @@ protected:
   
   float last_val;
   float pre_buf_end; // el valor del ultimo sample del buffer anterior
+  float prev_vals[6]; // [in[n-2], in[n-1], lpf[n-2], lpf[n-1], peak[n-2], peak[n-1]]
   
   uint32_t counter;
   int envelope_count;
@@ -32,6 +33,7 @@ protected:
   double glide;
   
   uint32_t midi_type;
+  
   
   //zapato: esto es un poco suboptimo? ocupa 16 kb que probablemente no use completos
   //float imaginarios[4096];
@@ -48,7 +50,8 @@ protected:
     return (s - c1 * (count - a - d - fabs(count - a - d)) + 
            (c2 + c1) * (count - a - fabs(count - a))) ;
   }
-
+  
+  void ir(int sample_count);
 
 public:
   typedef LV2::Plugin<RaffoSynth, LV2::URIMap<true> > Parent;

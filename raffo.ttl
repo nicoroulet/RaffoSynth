@@ -288,8 +288,8 @@
 	lv2:symbol "filter_sustain";
 	lv2:name "Filter Sustain";
 	lv2:minimum 0; 
-	lv2:maximum 10000.01;
-	lv2:default 10000;
+	lv2:maximum 1.01;
+	lv2:default 1;
   ],  
   
   
@@ -363,6 +363,6 @@
 	lv2:symbol "filter_resonance";
 	lv2:name "Resonance";
 	lv2:minimum 0; 
-	lv2:maximum 1000.01;
+	lv2:maximum 10.01;
 	lv2:default 0;
   ].
