@@ -8,6 +8,8 @@
 #include <list>
 #include <iostream>
 
+#include "tiempo.h"
+
 using namespace std;
 
 class RaffoSynth : public LV2::Plugin<RaffoSynth, LV2::URIMap<true> > //LV2::Synth<RaffoVoice, RaffoSynth> 
@@ -34,9 +36,11 @@ protected:
   
   uint32_t midi_type;
   
-  
-  //zapato: esto es un poco suboptimo? ocupa 16 kb que probablemente no use completos
-  //float imaginarios[4096];
+  Tiempo t_run;
+  Tiempo t_osc;
+  Tiempo t_eq;
+  int run_count;
+
   
   static inline float key2hz(unsigned char key) {
     return 8.1758 * pow(1.0594, key);
