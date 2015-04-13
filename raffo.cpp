@@ -14,6 +14,7 @@ RaffoSynth::RaffoSynth(double rate):
   sample_rate(rate),
   dt(1./rate),
   period(500),
+  glide_period(-1),
   counter(0),
   pitch(1)
   {
@@ -117,7 +118,7 @@ void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
       case (0x90): { // note on
         if (keys.empty()) {
           envelope_count = 0;
-          glide_period = sample_rate * 2 / key2hz(data[1]);
+          if (glide_period == -1) glide_period = sample_rate * 2 / key2hz(data[1]);
           counter = 0;
         }
         keys.push_front(data[1]);
@@ -126,7 +127,7 @@ void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
       }
       case (0x80): { // note off
         keys.remove(data[1]);
-        period = sample_rate * 2 / key2hz(keys.front());
+        if (!keys.empty()) period = sample_rate * 2 / key2hz(keys.front());
         break;
       }
       case (0xE0): { // pitch bend
@@ -189,8 +190,18 @@ void RaffoSynth::ir(int sample_count) {
   //http://www.musicdsp.org/files/Audio-EQ-Cookbook.txt
   
   // variables precalculadas
+ 
+  float a = *p(m_filter_attack)*100 + .1;
+  float d = *p(m_filter_decay)*100 + .1;
+  float s = pow(*p(m_filter_sustain),2);
+  float c1 = (1.-s)/(2.*d);
+  float c2 = 1./(2.*a);
+  float count = envelope_count - sample_count; 
+  if (count < 0) count = 0; //zapato: un toque turbio?
+  float env = envelope(count, a, d, s, c1, c2);
+  
   float gain_factor = pow(10., *p(m_filter_resonance)/40.);
-  float w0 = 6.28318530717959 * *p(m_filter_cutoff) / sample_rate;
+  float w0 = 6.28318530717959 * *p(m_filter_cutoff) * env / sample_rate;
   float alpha = sin(w0)/4.; // 2 * Q,  Q va a ser constante, por ahora = 2
   float cosw0 = cos(w0);
 
@@ -207,18 +218,9 @@ void RaffoSynth::ir(int sample_count) {
   float peak_b1 = - 2 * cosw0 / peak_a0;
   float peak_b2 = (1 - alpha * gain_factor) / peak_a0;
 
-  float count = envelope_count - sample_count; 
-  if (count < 0) count = 0; //zapato: un toque turbio?
- 
-  float a = *p(m_filter_attack)*100 + .1;
-  float d = *p(m_filter_decay)*100 + .1;
-  float s = pow(*p(m_filter_sustain),2);
-  float c1 = (1.-s)/(2.*d);
-  float c2 = 1./(2.*a);
 
   for (int i = 0; i < sample_count; i++) {
     //low-pass filter     
-    float env = envelope(count, a, d, s, c1, c2);
 
     float temp = p(m_output)[i];
     p(m_output)[i] *= lpf_b0;
@@ -239,9 +241,9 @@ void RaffoSynth::ir(int sample_count) {
     prev_vals[5] = p(m_output)[i];
 
     // filter ads
-    p(m_output)[i] *= env;
-    p(m_output)[i] += (1-env) * temp;
-    count++;
+    // p(m_output)[i] *= env;
+    // p(m_output)[i] += (1-env) * temp;
+    // count++;
      
   }
 
