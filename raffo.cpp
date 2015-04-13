@@ -200,7 +200,6 @@ void RaffoSynth::ir(int sample_count) {
   if (count < 0) count = 0; //zapato: un toque turbio?
   float env = envelope(count, a, d, s, c1, c2);
   
-  float gain_factor = pow(10., *p(m_filter_resonance)/40.);
   float w0 = 6.28318530717959 * *p(m_filter_cutoff) * env / sample_rate;
   float alpha = sin(w0)/4.; // 2 * Q,  Q va a ser constante, por ahora = 2
   float cosw0 = cos(w0);
@@ -211,12 +210,16 @@ void RaffoSynth::ir(int sample_count) {
   float lpf_b1 = (1 - cosw0) / lpf_a0;
   float lpf_b0 = lpf_b1 / 2;
 
-  float peak_a0 = 1 + alpha / gain_factor;
-  float peak_a1 = -2 * cosw0 / peak_a0;
-  float peak_a2 = (1 - alpha / gain_factor) / peak_a0;
-  float peak_b0 = (1 + alpha * gain_factor) / peak_a0;
-  float peak_b1 = - 2 * cosw0 / peak_a0;
-  float peak_b2 = (1 - alpha * gain_factor) / peak_a0;
+  float gain_factor = pow(10., *p(m_filter_resonance)/20.);
+  float peak_w0 = 6.28318530717959 * *p(m_filter_cutoff) * env * 0.9 / sample_rate;
+  float peak_alpha = sin(peak_w0)/4.; // 2 * Q,  Q va a ser constante, por ahora = 2
+  float cos_peak_w0 = cos(peak_w0);
+  float peak_a0 = 1 + peak_alpha / gain_factor;
+  float peak_a1 = -2 * cos_peak_w0 / peak_a0;
+  float peak_a2 = (1 - peak_alpha / gain_factor) / peak_a0;
+  float peak_b0 = (1 + peak_alpha * gain_factor) / peak_a0;
+  float peak_b1 = - 2 * cos_peak_w0 / peak_a0;
+  float peak_b2 = (1 - peak_alpha * gain_factor) / peak_a0;
 
 
   for (int i = 0; i < sample_count; i++) {
