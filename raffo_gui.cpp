@@ -10,10 +10,6 @@ using namespace Gtk;
 class RaffoSynthGUI : public LV2::GUI<RaffoSynthGUI> {
 public:
 
-	void oscButtonClick0(){
-		
-	}
-  	
   	
 	RaffoSynthGUI(const std::string& URI) {
 		Table* interfaz = manage(new Table(1, 4)); // tabla que contiene toda la interfaz
@@ -27,6 +23,7 @@ public:
 		osciladores->attach(*manage(new Label("Range")), 1, 2, 0, 1);
 		osciladores->attach(*manage(new Label("Waveform")), 2, 3, 0, 1);
 		osciladores->attach(*manage(new Label("Volume")), 3, 4, 0, 1);
+		osciladores->attach(*manage(new Label("Tuning")), 5, 6, 0, 1);
 		osciladores->attach(*manage(new Label("Osc 0")), 0, 1, 1, 2);
 		osciladores->attach(*manage(new Label("Osc 1")), 0, 1, 2, 3);
 		osciladores->attach(*manage(new Label("Osc 2")), 0, 1, 3, 4);
@@ -42,12 +39,15 @@ public:
 			vol[i] = manage(new HScale(m_ports[m_vol0 + i].min, m_ports[m_vol0+i].max, 0.01));
 			oscButton[i] = manage(new VScale(m_ports[m_oscButton0 + i].min, m_ports[m_oscButton0+i].max, 1));
 			oscButton[i]->set_inverted(true);
+
+			oscTuning[i] = manage(new HScale(m_ports[m_tuning0 + i].min, m_ports[m_tuning0+i].max, 0.01));
 			
 			range[i]->set_size_request(100, 50);
 			wave[i]->set_size_request(100, 30);
 			wave_label[i]->set_size_request(100, 20);
 			vol[i]->set_size_request(100, 50);
 			oscButton[i]->set_size_request(100, 50);
+			oscTuning[i]->set_size_request(100, 50);
 			
 			range[i]->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_range0 + i), mem_fun(*range[i], &HScale::get_value)));
 		 	
@@ -57,6 +57,8 @@ public:
 			
 			oscButton[i]->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_oscButton0 + i), mem_fun(*oscButton[i], &VScale::get_value)));
 
+			oscTuning[i]->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_tuning0 + i), mem_fun(*oscTuning[i], &HScale::get_value)));
+
 			wave[i]->set_draw_value(false);
 			
 
@@ -64,6 +66,7 @@ public:
 			osciladores->attach(*wavetable, 2, 3, 1 + i, 2 + i);
 			osciladores->attach(*vol[i], 3, 4, 1 + i, 2 + i);			   	
 			osciladores->attach(*oscButton[i], 4, 5, 1 + i, 2 + i);			   				   	
+			osciladores->attach(*oscTuning[i], 5, 6, 1 + i, 2 + i);			   				   	
 		}
 
 		
@@ -73,52 +76,62 @@ public:
 		modificadores->attach(*manage(new Label("Attack")), 0, 1, 3, 4);
 		modificadores->attach(*manage(new Label("Decay")), 1, 2, 3, 4);
 		modificadores->attach(*manage(new Label("Sustain")), 2, 3, 3, 4);
+		modificadores->attach(*manage(new Label("Release")), 3, 4, 3, 4);
 		modificadores->attach(*manage(new Label("Loudness")), 0, 3, 5, 6);
 		modificadores->attach(*manage(new Label("Attack")), 0, 1, 6, 7);
 		modificadores->attach(*manage(new Label("Decay")), 1, 2, 6, 7);
 		modificadores->attach(*manage(new Label("Sustain")), 2, 3, 6, 7);
+		modificadores->attach(*manage(new Label("Release")), 3, 4, 6, 7);
 		
 		filter_cutoff = manage(new HScale(m_ports[m_filter_cutoff].min, m_ports[m_filter_cutoff].max, 0.01));
 		filter_attack = manage(new HScale(m_ports[m_filter_attack].min, m_ports[m_filter_attack].max, 0.01));
 		filter_decay = manage(new HScale(m_ports[m_filter_decay].min, m_ports[m_filter_decay].max, 0.01));
 		filter_sustain = manage(new HScale(m_ports[m_filter_sustain].min, m_ports[m_filter_sustain].max, 0.01));
+		filter_release = manage(new HScale(m_ports[m_filter_release].min, m_ports[m_filter_release].max, 0.01));
 		filter_resonance = manage(new HScale(m_ports[m_filter_resonance].min, m_ports[m_filter_resonance].max, 0.01));
+
 
 		attack = manage(new HScale(m_ports[m_attack].min, m_ports[m_attack].max, 0.01));
 		decay = manage(new HScale(m_ports[m_decay].min, m_ports[m_decay].max, 0.01));
 		sustain = manage(new HScale(m_ports[m_sustain].min, m_ports[m_sustain].max, 0.01));
-		
+		release = manage(new HScale(m_ports[m_release].min, m_ports[m_release].max, 0.01));
 		
 		
 		filter_cutoff->set_size_request(100, -1);
 		filter_attack->set_size_request(100, -1);
 		filter_decay->set_size_request(100, -1);
 		filter_sustain->set_size_request(100, -1);
+		filter_release->set_size_request(100, -1);
 		filter_resonance->set_size_request(100, -1);
 
 		attack->set_size_request(100, -1);
 		decay->set_size_request(100, -1);
 		sustain->set_size_request(100, -1);
+		release->set_size_request(100, -1);
 		
 		filter_cutoff->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_filter_cutoff), mem_fun(*filter_cutoff, &HScale::get_value)));
 		filter_attack->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_filter_attack), mem_fun(*filter_attack, &HScale::get_value)));
 		filter_decay->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_filter_decay), mem_fun(*filter_decay, &HScale::get_value)));
 		filter_sustain->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_filter_sustain), mem_fun(*filter_sustain, &HScale::get_value)));
+		filter_release->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_filter_release), mem_fun(*filter_release, &HScale::get_value)));
 		filter_resonance->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_filter_resonance), mem_fun(*filter_resonance, &HScale::get_value)));
 
 		attack->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_attack), mem_fun(*attack, &HScale::get_value)));
 		decay->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_decay), mem_fun(*decay, &HScale::get_value)));
 		sustain->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_sustain), mem_fun(*sustain, &HScale::get_value)));
+		release->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_release), mem_fun(*release, &HScale::get_value)));
 		
 		modificadores->attach(*filter_cutoff, 0, 1, 2, 3);
 		modificadores->attach(*filter_attack, 0, 1, 4, 5);
 		modificadores->attach(*filter_decay, 1, 2, 4, 5);
 		modificadores->attach(*filter_sustain, 2, 3, 4, 5);
+		modificadores->attach(*filter_release, 3, 4, 4, 5);
 		modificadores->attach(*filter_resonance, 2, 3, 2, 3);
 
 		modificadores->attach(*attack, 0, 1, 7, 8);
 		modificadores->attach(*decay, 1, 2, 7, 8);
 		modificadores->attach(*sustain, 2, 3, 7, 8);
+		modificadores->attach(*release, 3, 4, 7, 8);
 		
 		
 		glide = manage(new VScale(m_ports[m_glide].min, m_ports[m_glide].max, 0.01));
@@ -292,6 +305,26 @@ public:
 				oscButton[3]->set_value(*static_cast<const float*>(buffer));
 				break;
 			}
+			case (m_tuning0): {
+				oscTuning[0]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_tuning1): {
+				oscTuning[1]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_tuning2): {
+				oscTuning[2]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_tuning3): {
+				oscTuning[3]->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
+			case (m_filter_release): {
+				filter_release->set_value(*static_cast<const float*>(buffer));
+				break;
+			}
 		}
 	}
 	protected:
@@ -299,6 +332,8 @@ public:
 		VScale* oscButton[4];
 
 		HScale* range[4];
+
+		HScale* oscTuning[4];
 
 		HScale* wave[4];
 
@@ -310,12 +345,14 @@ public:
 		HScale* filter_attack;
 		HScale* filter_decay;
 		HScale* filter_sustain;
+		HScale* filter_release;
 		HScale* filter_resonance;
 
 
 		HScale* attack;
 		HScale* decay;
 		HScale* sustain;
+		HScale* release;
 		
 		VScale* glide;
 		VScale* volume;
