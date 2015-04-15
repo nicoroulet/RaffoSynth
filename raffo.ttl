@@ -248,9 +248,9 @@
 	lv2:index 18;
 	lv2:symbol "release";
 	lv2:name "Release";
-	lv2:minimum 0; 
-	lv2:maximum 100.01;
-	lv2:default 0;
+	lv2:minimum 0.01; 
+	lv2:maximum 1.01;
+	lv2:default 0.01;
   ],
   
   
@@ -408,6 +408,6 @@
 	lv2:symbol "filter_release";
 	lv2:name "Filter release";
 	lv2:minimum 0; 
-	lv2:maximum 10.01;
+	lv2:maximum 1.01;
 	lv2:default 0;
   ].

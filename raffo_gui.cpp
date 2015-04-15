@@ -257,10 +257,10 @@ public:
 				sustain->set_value(*static_cast<const float*>(buffer));
 				break;
 			}
-			/*case (m_release): {
-				vol[3]->set_value(*static_cast<const float*>(buffer));
+			case (m_release): {
+				release->set_value(*static_cast<const float*>(buffer));
 				break;
-			}*/
+			}
 			case (m_filter_cutoff): {
 				filter_cutoff->set_value(*static_cast<const float*>(buffer));
 				break;

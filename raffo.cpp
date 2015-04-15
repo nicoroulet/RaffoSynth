@@ -6,6 +6,14 @@
 // max_samples: cantidad maxima de samples que se procesan por llamado a render()
 // un numero mayor resulta en mejor performance, pero peor granularidad en la transición de frecuencias
 #define max_samples 256
+#define ATTACK ((*p(m_attack) + 2) * 100)
+#define DECAY (*p(m_decay)*100 + .1)
+#define SUSTAIN pow(*p(m_sustain), 2)
+#define RELEASE *p(m_release)
+#define FILTER_ATTACK ((*p(m_filter_attack) + 2) * 100)
+#define FILTER_DECAY (*p(m_filter_decay)*100 + .1)
+#define FILTER_SUSTAIN *p(m_filter_sustain)
+#define FILTER_RELEASE *p(m_filter_release)
 
 using namespace std;
 
@@ -24,7 +32,7 @@ RaffoSynth::RaffoSynth(double rate):
      
      
 void RaffoSynth::render(uint32_t from, uint32_t to) {
-  if (keys.empty()) return;
+  //if (keys.empty()) return;
   
    t_osc.start();
   // buffer en 0
@@ -42,13 +50,13 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
   }
   
   // osciladores
-  int envelope_subcount;
+  //int envelope_subcount;
   
   float* buffer = p(m_output);
 
   for (int osc = 0; osc < 4; osc++) {
 		if (*p(m_oscButton0 + osc) == 1){	//Si el botón del oscilador está en 1, se ejecuta render
-			envelope_subcount = envelope_count;
+			//envelope_subcount = envelope_count;
       float vol = pow(*p(m_volume) * *p(m_vol0 + osc) / 200., 2); // el volumen es el cuadrado de la amplitud
       float subperiod = glide_period / ((*p(m_range0 + osc)+1)  * pitch); // periodo efectivo del oscilador
     
@@ -63,43 +71,35 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
           /
           |-a-|-d-|--------------|
         */
-      float a = *p(m_attack)*100 + .1;
-      float d = *p(m_decay)*100 + .1;
-      float s = pow(*p(m_sustain),2);
-      float c1 = (1.-s)/(2.*d);
-      float c2 = 1./(2.*a);
 
+      float env = envelope(envelope_count, ATTACK, DECAY, SUSTAIN);
+      cout << "env: " << env << endl;
       counter = last_val * glide_period + 1;
-      
       switch ((int)*p(m_wave0 + osc)) {
         case (0): { //triangular
-          for (uint32_t i = from; i < to; ++i && counter++ && envelope_subcount++) {
+          for (uint32_t i = from; i < to; ++i, counter++) {
             buffer[i] += vol * (4. * (fabs(fmod(((counter) + subperiod/4.), subperiod) /
-                              subperiod - .5)-.25)) * 
-                              envelope(envelope_subcount, a, d, s, c1, c2);
+                              subperiod - .5)-.25)) * env;
           }
           // zapato: la onda triangular esta hecha para que empiece continua, pero cuando se corta popea
           break;
         }
         case (1): { //sierra
-          for (uint32_t i = from; i < to; ++i && counter++ && envelope_subcount++) {
-            buffer[i] += vol * (2. * fmod(counter, subperiod) / subperiod - 1) * 
-                              envelope(envelope_subcount, a, d, s, c1, c2);
+          for (uint32_t i = from; i < to; ++i, counter++) {
+            buffer[i] += vol * (2. * fmod(counter, subperiod) / subperiod - 1) * env;
           
           }
           break;
         }
         case (2): { //cuadrada
-          for (uint32_t i = from; i < to; ++i && counter++ && envelope_subcount++) {
-            buffer[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .5) < 0)-1) * 
-                              envelope(envelope_subcount, a, d, s, c1, c2);
+          for (uint32_t i = from; i < to; ++i, counter++) {
+            buffer[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .5) < 0)-1) * env;
           }
           break;
         }
         case (3): { //pulso
-          for (uint32_t i = from; i < to; ++i && counter++ && envelope_subcount++) {
-            buffer[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .2) < 0)-1) * 
-                              envelope(envelope_subcount, a, d, s, c1, c2);
+          for (uint32_t i = from; i < to; ++i, counter++) {
+            buffer[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .2) < 0)-1) * env;
           }
           break;
         }
@@ -108,7 +108,7 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
   }	//Fin del for
   t_osc.stop();
   //counter = counter % (int)glide_period;
-  envelope_count += to - from;
+  
   last_val = fmod(counter, glide_period / pitch) / glide_period; //para ajustar el enganche de la onda entre corridas de la funcion
 }
   
@@ -117,8 +117,8 @@ void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
     switch (data[0]) {
       case (0x90): { // note on
         if (keys.empty()) {
-          envelope_count = 0;
-          if (glide_period == -1) glide_period = sample_rate * 2 / key2hz(data[1]);
+          //envelope_count = 0;
+          if (glide_period < 0) glide_period = sample_rate * 2 / key2hz(data[1]); // la primera nota no tiene glide
           counter = 0;
         }
         keys.push_front(data[1]);
@@ -127,7 +127,16 @@ void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
       }
       case (0x80): { // note off
         keys.remove(data[1]);
-        if (!keys.empty()) period = sample_rate * 2 / key2hz(keys.front());
+        if (keys.empty()) {
+          // poner los contadores de adsr en el lugar correcto
+          envelope_count = envelope(envelope_count, ATTACK, DECAY, SUSTAIN) * ATTACK;
+          envelope_count *= (envelope_count>0);
+          filter_count = envelope(filter_count, FILTER_ATTACK, FILTER_DECAY, FILTER_SUSTAIN) * FILTER_ATTACK;
+          filter_count *= (filter_count>0);
+        } else {
+          period = sample_rate * 2 / key2hz(keys.front());
+        }
+        //if (!keys.empty()) period = sample_rate * 2 / key2hz(keys.front());
         break;
       }
       case (0xE0): { // pitch bend
@@ -150,10 +159,11 @@ void RaffoSynth::run(uint32_t sample_count) {
 
   LV2_Event_Iterator iter;
   lv2_event_begin(&iter, reinterpret_cast<LV2_Event_Buffer*&>(Parent::m_ports[m_midi]));
+    cout << "envelope_count: " << envelope_count << endl;
+    cout << "glide_period: " << glide_period << endl;
 
   uint8_t* event_data;
   uint32_t samples_done = 0;
-
   while (samples_done < sample_count) {
     uint32_t to = sample_count;
     LV2_Event* ev = 0;
@@ -163,6 +173,15 @@ void RaffoSynth::run(uint32_t sample_count) {
       lv2_event_increment(&iter);
     }
     if (to > samples_done) {
+      if (keys.empty()) { // actualizamos los envelopes
+        envelope_count *= (1 - pow(RELEASE - 1, 2)) /* ((to-samples_done) / sample_count) **/ ;
+        //if (envelope_count < 0) envelope_count=0; //envelope_count *= (envelope_count > 0);
+        filter_count *= (1 - pow(FILTER_RELEASE - 1, 2));
+        //if (filter_count < 0) filter_count=0; //filter_count *= (filter_count > 0);
+      } else {
+          envelope_count += to - samples_done;
+          filter_count += to - samples_done;
+      }
       while (samples_done + max_samples < to) { // subdividimos el buffer en porciones de tamaño max_sample
         render(samples_done, samples_done + max_samples);
         samples_done += max_samples;
@@ -183,7 +202,7 @@ void RaffoSynth::run(uint32_t sample_count) {
   t_eq.stop();
 
   t_run.stop();
-  cout << run_count << " " << t_run.time << " " << t_osc.time << " " << t_eq.time << endl;
+  //cout << run_count << " " << t_run.time << " " << t_osc.time << " " << t_eq.time << endl;
 } /*run*/
   
 void RaffoSynth::ir(int sample_count) { 
@@ -191,14 +210,7 @@ void RaffoSynth::ir(int sample_count) {
   
   // variables precalculadas
  
-  float a = *p(m_filter_attack)*100 + .1;
-  float d = *p(m_filter_decay)*100 + .1;
-  float s = pow(*p(m_filter_sustain),2);
-  float c1 = (1.-s)/(2.*d);
-  float c2 = 1./(2.*a);
-  float count = envelope_count - sample_count; 
-  if (count < 0) count = 0; //zapato: un toque turbio?
-  float env = envelope(count, a, d, s, c1, c2);
+  float env = envelope(envelope_count, FILTER_ATTACK, FILTER_DECAY, FILTER_SUSTAIN);
   
   float w0 = 6.28318530717959 * *p(m_filter_cutoff) * env / sample_rate;
   float alpha = sin(w0)/4.; // 2 * Q,  Q va a ser constante, por ahora = 2

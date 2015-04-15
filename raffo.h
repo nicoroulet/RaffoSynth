@@ -29,6 +29,7 @@ protected:
   
   uint32_t counter;
   int envelope_count;
+  int filter_count;
   float modwheel;
   float pitch;
   
@@ -50,9 +51,14 @@ protected:
     return ((fabs(a-1) > fabs(b-1))? b: a);
   }
 
-  float envelope(int count, float a, float d, float s, float c1, float c2) { // zapato: esto seria mas eficiente con un define?
-    return (s - c1 * (count - a - d - fabs(count - a - d)) + 
+  float envelope(int count, float a, float d, float s) { // zapato: esto seria mas eficiente con un define?
+    
+    
+    float c1 = (1.-s)/(2.*d);
+    float c2 = 1./(2.*a);
+    float env = (s - c1 * (count - a - d - fabs(count - a - d)) + 
            (c2 + c1) * (count - a - fabs(count - a))) ;
+    return env * (env>0);
   }
   
   void ir(int sample_count);
