@@ -23,10 +23,11 @@ protected:
   uint32_t period; // periodo de la nota presionada
   float glide_period; // periodo que se esta reproduciendo
   
-  float last_val;
+  float last_val[4];
   float pre_buf_end; // el valor del ultimo sample del buffer anterior
   float prev_vals[6]; // [in[n-2], in[n-1], lpf[n-2], lpf[n-1], peak[n-2], peak[n-1]]
-  
+  bool primer_nota;
+
   uint32_t counter;
   int envelope_count;
   int filter_count;
@@ -52,13 +53,10 @@ protected:
   }
 
   float envelope(int count, float a, float d, float s) { // zapato: esto seria mas eficiente con un define?
-    
-    
     float c1 = (1.-s)/(2.*d);
     float c2 = 1./(2.*a);
-    float env = (s - c1 * (count - a - d - fabs(count - a - d)) + 
+    return (s - c1 * (count - a - d - fabs(count - a - d)) + 
            (c2 + c1) * (count - a - fabs(count - a))) ;
-    return env * (env>0);
   }
   
   void ir(int sample_count);

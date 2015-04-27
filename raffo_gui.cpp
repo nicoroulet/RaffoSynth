@@ -23,7 +23,7 @@ public:
 		osciladores->attach(*manage(new Label("Range")), 1, 2, 0, 1);
 		osciladores->attach(*manage(new Label("Waveform")), 2, 3, 0, 1);
 		osciladores->attach(*manage(new Label("Volume")), 3, 4, 0, 1);
-		osciladores->attach(*manage(new Label("Tuning")), 5, 6, 0, 1);
+		osciladores->attach(*manage(new Label("Frequency")), 4, 5, 0, 1);
 		osciladores->attach(*manage(new Label("Osc 0")), 0, 1, 1, 2);
 		osciladores->attach(*manage(new Label("Osc 1")), 0, 1, 2, 3);
 		osciladores->attach(*manage(new Label("Osc 2")), 0, 1, 3, 4);
@@ -43,8 +43,8 @@ public:
 			oscTuning[i] = manage(new HScale(m_ports[m_tuning0 + i].min, m_ports[m_tuning0+i].max, 0.01));
 			
 			range[i]->set_size_request(100, 50);
-			wave[i]->set_size_request(100, 30);
-			wave_label[i]->set_size_request(100, 20);
+			wave[i]->set_size_request(100, 35);
+			wave_label[i]->set_size_request(100, 15);
 			vol[i]->set_size_request(100, 50);
 			oscButton[i]->set_size_request(100, 50);
 			oscTuning[i]->set_size_request(100, 50);
@@ -65,8 +65,8 @@ public:
 			osciladores->attach(*range[i], 1, 2, 1 + i, 2 + i);
 			osciladores->attach(*wavetable, 2, 3, 1 + i, 2 + i);
 			osciladores->attach(*vol[i], 3, 4, 1 + i, 2 + i);			   	
-			osciladores->attach(*oscButton[i], 4, 5, 1 + i, 2 + i);			   				   	
-			osciladores->attach(*oscTuning[i], 5, 6, 1 + i, 2 + i);			   				   	
+			osciladores->attach(*oscButton[i], 5, 6, 1 + i, 2 + i);			   				   	
+			osciladores->attach(*oscTuning[i], 4, 5, 1 + i, 2 + i);			   				   	
 		}
 
 		
@@ -77,22 +77,22 @@ public:
 		modificadores->attach(*manage(new Label("Decay")), 1, 2, 3, 4);
 		modificadores->attach(*manage(new Label("Sustain")), 2, 3, 3, 4);
 		modificadores->attach(*manage(new Label("Release")), 3, 4, 3, 4);
-		modificadores->attach(*manage(new Label("Loudness")), 0, 3, 5, 6);
+		modificadores->attach(*manage(new Label("Loudness")), 0, 4, 5, 6);
 		modificadores->attach(*manage(new Label("Attack")), 0, 1, 6, 7);
 		modificadores->attach(*manage(new Label("Decay")), 1, 2, 6, 7);
 		modificadores->attach(*manage(new Label("Sustain")), 2, 3, 6, 7);
 		modificadores->attach(*manage(new Label("Release")), 3, 4, 6, 7);
 		
-		filter_cutoff = manage(new HScale(m_ports[m_filter_cutoff].min, m_ports[m_filter_cutoff].max, 0.01));
-		filter_attack = manage(new HScale(m_ports[m_filter_attack].min, m_ports[m_filter_attack].max, 0.01));
-		filter_decay = manage(new HScale(m_ports[m_filter_decay].min, m_ports[m_filter_decay].max, 0.01));
+		filter_cutoff = manage(new HScale(m_ports[m_filter_cutoff].min, m_ports[m_filter_cutoff].max, 1));
+		filter_attack = manage(new HScale(m_ports[m_filter_attack].min, m_ports[m_filter_attack].max, 1));
+		filter_decay = manage(new HScale(m_ports[m_filter_decay].min, m_ports[m_filter_decay].max, 1));
 		filter_sustain = manage(new HScale(m_ports[m_filter_sustain].min, m_ports[m_filter_sustain].max, 0.01));
 		filter_release = manage(new HScale(m_ports[m_filter_release].min, m_ports[m_filter_release].max, 0.01));
 		filter_resonance = manage(new HScale(m_ports[m_filter_resonance].min, m_ports[m_filter_resonance].max, 0.01));
 
 
-		attack = manage(new HScale(m_ports[m_attack].min, m_ports[m_attack].max, 0.01));
-		decay = manage(new HScale(m_ports[m_decay].min, m_ports[m_decay].max, 0.01));
+		attack = manage(new HScale(m_ports[m_attack].min, m_ports[m_attack].max, 1));
+		decay = manage(new HScale(m_ports[m_decay].min, m_ports[m_decay].max, 1));
 		sustain = manage(new HScale(m_ports[m_sustain].min, m_ports[m_sustain].max, 0.01));
 		release = manage(new HScale(m_ports[m_release].min, m_ports[m_release].max, 0.01));
 		

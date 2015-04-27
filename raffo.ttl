@@ -120,13 +120,13 @@
 	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 2;
-	lv2:minimum 0;
-	lv2:maximum 5;
-	lv2:scalePoint [ rdf:value 0; rdfs:label "32'" ];
-	lv2:scalePoint [ rdf:value 1; rdfs:label "16'" ];
-	lv2:scalePoint [ rdf:value 2; rdfs:label "8'" ];
-	lv2:scalePoint [ rdf:value 3; rdfs:label "4'" ];
-	lv2:scalePoint [ rdf:value 4; rdfs:label "2'" ];
+	lv2:minimum 1;
+	lv2:maximum 6;
+	lv2:scalePoint [ rdf:value 1; rdfs:label "32'" ];
+	lv2:scalePoint [ rdf:value 2; rdfs:label "16'" ];
+	lv2:scalePoint [ rdf:value 3; rdfs:label "8'" ];
+	lv2:scalePoint [ rdf:value 4; rdfs:label "4'" ];
+	lv2:scalePoint [ rdf:value 5; rdfs:label "2'" ];
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -136,13 +136,13 @@
 	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 2;
-	lv2:minimum 0;
-	lv2:maximum 5;
-	lv2:scalePoint [ rdf:value 0; rdfs:label "32'" ];
-	lv2:scalePoint [ rdf:value 1; rdfs:label "16'" ];
-	lv2:scalePoint [ rdf:value 2; rdfs:label "8'" ];
-	lv2:scalePoint [ rdf:value 3; rdfs:label "4'" ];
-	lv2:scalePoint [ rdf:value 4; rdfs:label "2'" ];
+	lv2:minimum 1;
+	lv2:maximum 6;
+	lv2:scalePoint [ rdf:value 1; rdfs:label "32'" ];
+	lv2:scalePoint [ rdf:value 2; rdfs:label "16'" ];
+	lv2:scalePoint [ rdf:value 3; rdfs:label "8'" ];
+	lv2:scalePoint [ rdf:value 4; rdfs:label "4'" ];
+	lv2:scalePoint [ rdf:value 5; rdfs:label "2'" ];
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -152,13 +152,13 @@
 	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 2;
-	lv2:minimum 0;
-	lv2:maximum 5;
-	lv2:scalePoint [ rdf:value 0; rdfs:label "32'" ];
-	lv2:scalePoint [ rdf:value 1; rdfs:label "16'" ];
-	lv2:scalePoint [ rdf:value 2; rdfs:label "8'" ];
-	lv2:scalePoint [ rdf:value 3; rdfs:label "4'" ];
-	lv2:scalePoint [ rdf:value 4; rdfs:label "2'" ];
+	lv2:minimum 1;
+	lv2:maximum 6;
+	lv2:scalePoint [ rdf:value 1; rdfs:label "32'" ];
+	lv2:scalePoint [ rdf:value 2; rdfs:label "16'" ];
+	lv2:scalePoint [ rdf:value 3; rdfs:label "8'" ];
+	lv2:scalePoint [ rdf:value 4; rdfs:label "4'" ];
+	lv2:scalePoint [ rdf:value 5; rdfs:label "2'" ];
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -168,13 +168,13 @@
 	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
 	lv2:default 2;
-	lv2:minimum 0;
-	lv2:maximum 5;
-	lv2:scalePoint [ rdf:value 0; rdfs:label "32'" ];
-	lv2:scalePoint [ rdf:value 1; rdfs:label "16'" ];
-	lv2:scalePoint [ rdf:value 2; rdfs:label "8'" ];
-	lv2:scalePoint [ rdf:value 3; rdfs:label "4'" ];
-	lv2:scalePoint [ rdf:value 4; rdfs:label "2'" ];
+	lv2:minimum 1;
+	lv2:maximum 6;
+	lv2:scalePoint [ rdf:value 1; rdfs:label "32'" ];
+	lv2:scalePoint [ rdf:value 2; rdfs:label "16'" ];
+	lv2:scalePoint [ rdf:value 3; rdfs:label "8'" ];
+	lv2:scalePoint [ rdf:value 4; rdfs:label "4'" ];
+	lv2:scalePoint [ rdf:value 5; rdfs:label "2'" ];
   ],
   
   
@@ -371,8 +371,8 @@
 	lv2:index 29;
 	lv2:symbol "tuning0";
 	lv2:name "Osc tuning 0";
-	lv2:minimum -10.01; 
-	lv2:maximum 10.01;
+	lv2:minimum -12.0; 
+	lv2:maximum 12.01;
 	lv2:default 0;
   ],
   [
@@ -380,8 +380,8 @@
 	lv2:index 30;
 	lv2:symbol "tuning1";
 	lv2:name "Osc tuning 1";
-	lv2:minimum -10.01; 
-	lv2:maximum 10.01;
+	lv2:minimum -12.0; 
+	lv2:maximum 12.01;
 	lv2:default 0;
   ],
   [
@@ -389,8 +389,8 @@
 	lv2:index 31;
 	lv2:symbol "tuning2";
 	lv2:name "Osc tuning2";
-	lv2:minimum -10.01; 
-	lv2:maximum 10.01;
+	lv2:minimum -12.0; 
+	lv2:maximum 12.01;
 	lv2:default 0;
   ],
   [
@@ -398,8 +398,8 @@
 	lv2:index 32;
 	lv2:symbol "tuning3";
 	lv2:name "Osc tuning3";
-	lv2:minimum -10.01; 
-	lv2:maximum 10.01;
+	lv2:minimum -12.0; 
+	lv2:maximum 12.01;
 	lv2:default 0;
   ],
   [

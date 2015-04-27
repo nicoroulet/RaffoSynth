@@ -22,9 +22,10 @@ RaffoSynth::RaffoSynth(double rate):
   sample_rate(rate),
   dt(1./rate),
   period(500),
-  glide_period(-1),
+  glide_period(500),
   counter(0),
-  pitch(1)
+  pitch(1),
+  primer_nota(true)
   {
     midi_type = Parent::uri_to_id(LV2_EVENT_URI, "http://lv2plug.in/ns/ext/midi#MidiEvent"); 
     prev_vals[0] = prev_vals[1] = prev_vals[2] = prev_vals[3] = prev_vals[4] = prev_vals[5] = 0;
@@ -53,12 +54,11 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
   //int envelope_subcount;
   
   float* buffer = p(m_output);
-
   for (int osc = 0; osc < 4; osc++) {
-		if (*p(m_oscButton0 + osc) == 1){	//Si el botón del oscilador está en 1, se ejecuta render
-			//envelope_subcount = envelope_count;
+    if (*p(m_oscButton0 + osc) == 1){ //Si el botón del oscilador está en 1, se ejecuta render
+      //envelope_subcount = envelope_count;
       float vol = pow(*p(m_volume) * *p(m_vol0 + osc) / 200., 2); // el volumen es el cuadrado de la amplitud
-      float subperiod = glide_period / ((*p(m_range0 + osc)+1)  * pitch); // periodo efectivo del oscilador
+      float subperiod = glide_period / (pow(2,*p(m_range0 + osc))  * pitch * pow(2, *p(m_tuning0 + osc) / 12.) ); // periodo efectivo del oscilador
     
       // valores precalculados para el envelope
       // la función de envelope es:
@@ -73,8 +73,8 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
         */
 
       float env = envelope(envelope_count, ATTACK, DECAY, SUSTAIN);
-      cout << "env: " << env << endl;
-      counter = last_val * glide_period + 1;
+      counter = last_val[osc] * subperiod;
+
       switch ((int)*p(m_wave0 + osc)) {
         case (0): { //triangular
           for (uint32_t i = from; i < to; ++i, counter++) {
@@ -104,12 +104,12 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
           break;
         }
       }
-    }	//Fin del if
-  }	//Fin del for
+    last_val[osc] = fmod(counter, subperiod) / subperiod; //para ajustar el enganche de la onda entre corridas de la funcion
+    } //Fin del if
+  } //Fin del for
   t_osc.stop();
   //counter = counter % (int)glide_period;
   
-  last_val = fmod(counter, glide_period / pitch) / glide_period; //para ajustar el enganche de la onda entre corridas de la funcion
 }
   
 void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
@@ -118,7 +118,10 @@ void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
       case (0x90): { // note on
         if (keys.empty()) {
           //envelope_count = 0;
-          if (glide_period < 0) glide_period = sample_rate * 2 / key2hz(data[1]); // la primera nota no tiene glide
+          if (primer_nota) {
+            glide_period = sample_rate * 2 / key2hz(data[1]); // la primera nota no tiene glide
+            primer_nota = false;
+          }
           counter = 0;
         }
         keys.push_front(data[1]);
@@ -159,8 +162,6 @@ void RaffoSynth::run(uint32_t sample_count) {
 
   LV2_Event_Iterator iter;
   lv2_event_begin(&iter, reinterpret_cast<LV2_Event_Buffer*&>(Parent::m_ports[m_midi]));
-    cout << "envelope_count: " << envelope_count << endl;
-    cout << "glide_period: " << glide_period << endl;
 
   uint8_t* event_data;
   uint32_t samples_done = 0;
@@ -210,9 +211,9 @@ void RaffoSynth::ir(int sample_count) {
   
   // variables precalculadas
  
-  float env = envelope(envelope_count, FILTER_ATTACK, FILTER_DECAY, FILTER_SUSTAIN);
+  float env = envelope(filter_count, FILTER_ATTACK, FILTER_DECAY, FILTER_SUSTAIN);
   
-  float w0 = 6.28318530717959 * *p(m_filter_cutoff) * env / sample_rate;
+  float w0 = 6.28318530717959 * (*p(m_filter_cutoff) * env + 100) / sample_rate;
   float alpha = sin(w0)/4.; // 2 * Q,  Q va a ser constante, por ahora = 2
   float cosw0 = cos(w0);
 
@@ -223,7 +224,7 @@ void RaffoSynth::ir(int sample_count) {
   float lpf_b0 = lpf_b1 / 2;
 
   float gain_factor = pow(10., *p(m_filter_resonance)/20.);
-  float peak_w0 = 6.28318530717959 * *p(m_filter_cutoff) * env * 0.9 / sample_rate;
+  float peak_w0 = 6.28318530717959 * (*p(m_filter_cutoff) * env + 100) * 0.9 / sample_rate;
   float peak_alpha = sin(peak_w0)/4.; // 2 * Q,  Q va a ser constante, por ahora = 2
   float cos_peak_w0 = cos(peak_w0);
   float peak_a0 = 1 + peak_alpha / gain_factor;
@@ -234,6 +235,7 @@ void RaffoSynth::ir(int sample_count) {
   float peak_b2 = (1 - peak_alpha * gain_factor) / peak_a0;
 
 
+  //cout << "in: " << p(m_output)[0];cout << " out: " << p(m_output)[0] << " filter_count: " << filter_count << endl;
   for (int i = 0; i < sample_count; i++) {
     //low-pass filter     
 
@@ -261,6 +263,7 @@ void RaffoSynth::ir(int sample_count) {
     // count++;
      
   }
+    
 
 }
 static int _ = RaffoSynth::register_class(m_uri);
