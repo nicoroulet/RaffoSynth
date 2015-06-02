@@ -21,6 +21,10 @@ extern "C" void ondaTriangular(uint32_t from, uint32_t to, uint32_t counter, flo
 
 extern "C" void ondaSierra(uint32_t from, uint32_t to, uint32_t counter, float* buffer, float subperiod, float vol, float env);
 
+extern "C" void ondaPulso(uint32_t from, uint32_t to, uint32_t counter, float* buffer, float subperiod, float vol, float env);
+
+extern "C" void ondaCuadrada(uint32_t from, uint32_t to, uint32_t counter, float* buffer, float subperiod, float vol, float env);
+
 extern "C" void nada();
 
 RaffoSynth::RaffoSynth(double rate):
@@ -106,15 +110,24 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
           break;
         }
         case (2): { //cuadrada
-          for (uint32_t i = from; i < to; ++i, counter++) {
-            buffer[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .5) < 0)-1) * env;
-          }
+          //ASM
+          ondaCuadrada(from, to, counter, buffer, subperiod, vol, env);
+          counter+= (to-from);
+          //C
+          // for (uint32_t i = from; i < to; ++i, counter++) {
+          //   buffer[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .5) < 0)-1) * env;
+          // }
           break;
         }
         case (3): { //pulso
-          for (uint32_t i = from; i < to; ++i, counter++) {
-            buffer[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .2) < 0)-1) * env;
-          }
+          //ASM
+          ondaPulso(from, to, counter, buffer, subperiod, vol, env);
+          counter+= (to-from);
+
+          //C
+          // for (uint32_t i = from; i < to; ++i, counter++) {
+          //   buffer[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .2) < 0)-1) * env;
+          // }
           break;
         }
       }
