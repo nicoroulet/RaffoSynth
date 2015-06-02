@@ -17,7 +17,13 @@
 
 using namespace std;
 
-RaffoSynth::RaffoSynth(double rate): 
+extern "C" void ondaTriangular(uint32_t from, uint32_t to, uint32_t counter, float* buffer, float subperiod, float vol, float env);
+
+extern "C" void ondaSierra(uint32_t from, uint32_t to, uint32_t counter, float* buffer, float subperiod, float vol, float env);
+
+extern "C" void nada();
+
+RaffoSynth::RaffoSynth(double rate):
   Parent(m_n_ports),
   sample_rate(rate),
   dt(1./rate),
@@ -77,6 +83,10 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
 
       switch ((int)*p(m_wave0 + osc)) {
         case (0): { //triangular
+          // ASM
+          // ondaTriangular(from, to, counter, buffer, subperiod, vol, env);
+
+          //  C
           for (uint32_t i = from; i < to; ++i, counter++) {
             buffer[i] += vol * (4. * (fabs(fmod(((counter) + subperiod/4.), subperiod) /
                               subperiod - .5)-.25)) * env;
@@ -85,10 +95,14 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
           break;
         }
         case (1): { //sierra
-          for (uint32_t i = from; i < to; ++i, counter++) {
-            buffer[i] += vol * (2. * fmod(counter, subperiod) / subperiod - 1) * env;
-          
-          }
+          //ASM
+          ondaSierra(from, to, counter, buffer, subperiod, vol, env);
+          counter+= (to - from);
+
+          //C
+          // for (uint32_t i = from; i < to; i+=4, counter+=4) {
+          //   buffer[i] += vol * (2. * fmod(counter, subperiod) / subperiod - 1) * env;
+          // }
           break;
         }
         case (2): { //cuadrada
