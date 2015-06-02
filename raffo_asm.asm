@@ -72,14 +72,19 @@ ondaSierra:
 
 	movdqu xmm10, [rel unos]	;xmm10 = 1.0 | 1.0 | 1.0 | 1.0
 
-	movdqu xmm4, [rel cuatros]	
-	
+	;movdqu xmm4, [rel cuatros]	
+	movdqu xmm4, xmm10
+	addps xmm4, xmm4
+	addps xmm4, xmm4	;xmm4 es 4.0 | 4.0 | 4.0 | 4.0
+
 
 	;----broadcasteo variables
 	pshufd xmm0, xmm0, 0		;broadcasteo subperiod
 
-	movdqu xmm6, [rel dos]		
-	
+	;movdqu xmm6, [rel dos]		
+	movdqu xmm6, xmm10
+	addps xmm6, xmm6			;xmm6 tiene 2.0 | 2.0 | 2.0 | 2.0
+
 	divps xmm6, xmm0			;xmm6 tiene 2/subperiod | 2/subperiod | 2/subperiod | 2/subperiod 
 	
 
@@ -146,6 +151,140 @@ ondaSierra:
 	pop rbp
 
 ret
+
+; void OndaSierra(uint32_t from, uint32_t to, uint32_t counter, float* buffer, float subperiod, float vol, float env){
+; 	for (uint32_t i = from; i < to; ++i, counter++) {
+;  		buffer[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .5) < 0)-1) * env;
+;  }
+; }
+
+;void ondaCuadrada   			- una sierra que cuando vale > .5 es un 1, y en cc es un 0
+	;uint32_i from 			edi
+	;uint32_i to 			esi
+	;uint32_t counter		edx
+	;float* buffer			ecx
+
+	;float subperiod		xmm0
+	;float vol 				xmm1
+	;float env				xmm2
+
+ondaCuadrada:
+	push rbp
+	mov rbp, rsp
+	push rbx		;rbx es i
+	push r12		;
+	push r13		;
+	push r14		;
+
+
+	;----seteo variables
+	mov ebx, edi	;ebx es i
+
+	mov r14, 0xFFFFFF
+	mov xmm14, 0xFFFFFFFF
+	pshufd xmm14, xmm14, 0
+
+	movdqu xmm11, [rel medios]	;xmm11 = 0.5 | 0.5 | 0.5 | 0.5
+
+	;movdqu xmm10, [rel unos]	
+	movdqu xmm10, xmm11
+	addps xmm10, xmm10			;xmm10 = 1.0 | 1.0 | 1.0 | 1.0
+
+	;movdqu xmm4, [rel cuatros]	
+	movdqu xmm4, xmm10
+	addps xmm4, xmm4
+	addps xmm4, xmm4	;xmm4 es 4.0 | 4.0 | 4.0 | 4.0
+
+	movdqu xmm12, [rel ceros]
+
+
+	;----broadcasteo variables
+	pshufd xmm0, xmm0, 0		;broadcasteo subperiod
+
+	;movdqu xmm6, [rel dos]		
+	movdqu xmm6, xmm10
+	addps xmm6, xmm6			;xmm6 tiene 2.0 | 2.0 | 2.0 | 2.0
+	
+
+	pshufd xmm1, xmm1, 0		;broadcasteo vol
+
+	pshufd xmm2, xmm2, 0		;broadcasteo env
+
+	movd xmm3, edx
+	pshufd xmm3, xmm3, 0		;broadcasteo counter, en xmm3
+	cvtdq2ps xmm3, xmm3
+	addps xmm3, [rel sumadorCounter]	;xmm3= counter | counter+1 | counter+2 | counter +3
+
+
+	.ciclo:
+	cmp ebx, esi		;si i es to, termino
+	jae .fin
+
+	mov r14d, ebx
+	imul r14d, 4	;r16d es i * 4
+	add r14d, ecx	;r16d es la posicion a escribir del buffer
+
+	movdqu xmm7, [r14d]		;levanto *buffer + i a xmm7
+
+	;---en xmm5 calculo el valor a sumarle a buffer
+
+	;--xmm5 = fmod(counter, subperiod)
+	;No hay fmod, así que me las arreglo:
+	;--xmm5 = (((counter/subperiod) - truncf(counter/subperiod))*subperiod)
+	movdqu xmm5, xmm3		;xmm5 = counter
+	divps xmm5, xmm0		;xmm5 = counter/subperiod
+	movdqu xmm8, xmm5		;xmm8 = counter/subperiod
+	
+	roundps xmm8, xmm8, 3 	;xmm8 = roundps(counter/subperiod, 3), trunco xmm8
+	
+	subps xmm5, xmm8		;xmm5 = (counter/subperiod) - truncf(counter/subperiod)
+
+	mulps xmm5, xmm0		;xmm8 = ((counter/subperiod) - truncf(counter/subperiod))*subperiod
+	;----
+
+	;buffer[i] += vol * (2. * fmod(counter, subperiod) / subperiod - 1) * env;
+
+
+	divps xmm5, xmm0		;lo divido por subperiod
+	subps xmm5, xmm11		;le resto .5
+
+
+	movdqu xmm13, xmm14		;xmm13 es full 1
+	cmppd xmm5, xmm12, 1	;me fijo si xmm5 < 0
+	mulps xmm5, xmm10		;donde xmm5 < 0, hay un 1.0. donde no, hay ceros
+
+	pxor xmm13, xmm5
+	mulps xmm13, xmm12		;donde xmm5>= 0 hay un 0.0, donde no, hay ceros.
+
+	addps xmm5, xmm13		;donde xmm5<0 hay 1.0. donde no, hay 0.0.
+
+
+	mulps xmm5, xmm6		;lo multiplico por 2
+
+	subps xmm5, xmm10		;le resto unos
+	mulps xmm5, xmm1		;lo multiplico por vol
+	mulps xmm5, xmm2		;lo multiplico por env
+
+
+	;---counter = xmm7 + xmm5
+	addps xmm5, xmm7		;le agrego el previo valor del buffer
+	movdqu [r14d], xmm5		;guardo
+
+	;---incrementaciones
+	addps xmm3, xmm4		;a counter le sumo 4 | 4 | 4 | 4
+	add ebx, 4					;incremento el contador i
+	jmp .ciclo
+	.fin:
+
+	pop r14
+	pop r13
+	pop r12
+	pop rbx
+	pop rbp
+
+ret
+
+
 
 ;void ondaTriangular(uint32_t from, uint32_t to, uint32_t counter, float* buffer, float subperiod, float vol, float env){
 ;	for (uint32_t i = from; i < to; ++i, counter++) {
