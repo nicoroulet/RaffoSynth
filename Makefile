@@ -1,38 +1,41 @@
 BUNDLE = raffo.lv2
 INSTALL_DIR = /usr/local/lib/lv2
-FLAGS = -O3 -std=c++11
+FLAGS = -O3 -std=c++11 -m64
 
 ASM = nasm
 DBG = gdb
-CFLAGS64 = -ggdb -Wall -std=c99 -pedantic -m64 -O0
-ASMFLAGS64 = -felf64 -g -F dwarf
-COMPILE_ASM = 0
+#CFLAGS64 = -ggdb -Wall -std=c99 -pedantic -m64 -O0
+CFLAGS = -std=c99 -m64 -O3
+ASMFLAGS64 = -felf64 -F dwarf
 
-RAFFO_OBJ := if COMPILE_ASM then raffo_asm.o else raffo_c.o
+#RAFFO_OBJ := if COMPILE_ASM then raffo_asm.o else raffo_c.o
 
-$(BUNDLE): manifest.ttl raffo.ttl raffo.so raffo_gui.so raffo_asm.o Makefile
+cpp: oscillators_c $(BUNDLE)
+
+asm: oscillators_asm $(BUNDLE)
+
+$(BUNDLE): manifest.ttl raffo.ttl raffo.so raffo_gui.so oscillators.o
 	rm -rf $(BUNDLE)
 	mkdir $(BUNDLE)
 	cp $^ $(BUNDLE)
-
 #raffo.s: raffo.peg raffo.h tiempo.h raffo_asm.o raffo.o
 #	g++ -shared -fPIC -DPIC raffo.o raffo_asm.o -o raffo.so
 
-raffo.so: raffo.peg raffo.h tiempo.h raffo_asm.o raffo.cpp
-	g++ -shared -fPIC -DPIC $(FLAGS) raffo.cpp raffo_asm.o `pkg-config --cflags --libs lv2-plugin` -o raffo.so
+raffo.so: raffo.peg raffo.h tiempo.h raffo.cpp oscillators.o 
+	g++ -shared -fPIC -DPIC $(FLAGS) raffo.cpp oscillators.o `pkg-config --cflags --libs lv2-plugin` -o raffo.so
 
-raffo_asm.o: raffo_asm.asm
-	nasm -g -f elf64 raffo_asm.asm -o raffo_asm.o
+oscillators_asm: raffo_asm.asm
+	nasm -g -f elf64 raffo_asm.asm -o oscillators.o
+	
+oscillators_c: oscillators.c
+	cc -c -fPIC $(CFLAGS) oscillators.c -o oscillators.o
 
 raffo_gui.so: raffo_gui.cpp raffo.peg
-	g++ -shared -fPIC -DPIC -Wno-write-strings $(FLAGS) raffo_gui.cpp `pkg-config --cflags --libs lv2-gui` -o raffo_gui.so 
+	g++ -shared -fPIC -Wno-write-strings $(FLAGS) raffo_gui.cpp `pkg-config --cflags --libs lv2-gui` -o raffo_gui.so 
 	
 raffo.peg: raffo.ttl
 	lv2peg raffo.ttl raffo.peg
 
-#defines:
-#	compile_asm=1
-#	COMPILE_ASM=1
 	
 install: $(BUNDLE)
 	mkdir -p $(INSTALL_DIR)
@@ -42,3 +45,5 @@ install: $(BUNDLE)
 
 clean:
 	rm -rf $(BUNDLE) raffo.so raffo_gui.so raffo.peg raffo.o raffo_asm.o
+
+.PHONY: install clean oscillators_c oscillators_asm

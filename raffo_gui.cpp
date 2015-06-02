@@ -366,7 +366,7 @@ public:
 		// prompt.signal_response().connect(bind<0>(mem_fun(*this, &RaffoSynthGUI::save_file), entry));
 		string s = PRESET_FOLDER;
 		s += filename->get_buffer()->get_text();
-		s += ".txt";
+		s += ".dat";
 		cout << s << endl;
 		ofstream f;
 		f.open(s.c_str());
