@@ -63,7 +63,7 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
   for (int osc = 0; osc < 4; osc++) {
     if (*p(m_oscButton0 + osc) == 1){ //Si el botón del oscilador está en 1, se ejecuta render
       //envelope_subcount = envelope_count;
-      float vol = pow(*p(m_volume) * *p(m_vol0 + osc) / 200., 2); // el volumen es el cuadrado de la amplitud
+      float vol = pow(*p(m_volume) * *p(m_vol0 + osc) / 100., .5)/4; // el volumen es el cuadrado de la amplitud
       float subperiod = glide_period / (pow(2,*p(m_range0 + osc))  * pitch * pow(2, *p(m_tuning0 + osc) / 12.) ); // periodo efectivo del oscilador
     
       // valores precalculados para el envelope
@@ -133,13 +133,13 @@ void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
         if (keys.empty()) {
           //envelope_count = 0;
           if (primer_nota) {
-            glide_period = sample_rate * 2 / key2hz(data[1]); // la primera nota no tiene glide
+            glide_period = sample_rate * 4 / key2hz(data[1]); // la primera nota no tiene glide
             primer_nota = false;
           }
           counter = 0;
         }
         keys.push_front(data[1]);
-        period = sample_rate * 2 / key2hz(data[1]);
+        period = sample_rate * 4 / key2hz(data[1]);
         break;
       }
       case (0x80): { // note off
@@ -151,7 +151,7 @@ void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
           filter_count = envelope(filter_count, FILTER_ATTACK, FILTER_DECAY, FILTER_SUSTAIN) * FILTER_ATTACK;
           filter_count *= (filter_count>0);
         } else {
-          period = sample_rate * 2 / key2hz(keys.front());
+          period = sample_rate * 4 / key2hz(keys.front());
         }
         //if (!keys.empty()) period = sample_rate * 2 / key2hz(keys.front());
         break;

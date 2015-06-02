@@ -38,6 +38,7 @@ install: $(BUNDLE)
 	mkdir -p $(INSTALL_DIR)
 	rm -rf $(INSTALL_DIR)/$(BUNDLE)
 	cp -R $(BUNDLE) $(INSTALL_DIR)
+	mkdir -p -m=777 $(INSTALL_DIR)/$(BUNDLE)/presets
 
 clean:
 	rm -rf $(BUNDLE) raffo.so raffo_gui.so raffo.peg raffo.o raffo_asm.o

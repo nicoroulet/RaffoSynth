@@ -1,18 +1,24 @@
 #include <gtkmm.h>
 #include <vector>
+#include <fstream>
+#include <iostream>
+
 #include <lv2gui.hpp>
 #include "raffo.peg"
 
 using namespace sigc;
 using namespace Gtk;
 
+using namespace std;
+
+#define PRESET_FOLDER "/usr/local/lib/lv2/raffo.lv2/presets/" 
 
 class RaffoSynthGUI : public LV2::GUI<RaffoSynthGUI> {
 public:
 
   	
 	RaffoSynthGUI(const std::string& URI) {
-		Table* interfaz = manage(new Table(1, 4)); // tabla que contiene toda la interfaz
+		Table* interfaz = manage(new Table(2, 4)); // tabla que contiene toda la interfaz
 		Table* osciladores = manage(new Table(5, 4)); // subtablas
 		Table* modificadores = manage(new Table(8, 3));
 		Table* params = manage(new Table(4,1));
@@ -139,7 +145,7 @@ public:
 		glide->set_inverted(true);
 		
 		volume = manage(new VScale(m_ports[m_volume].min, m_ports[m_volume].max, 0.01));
-		volume->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_volume), mem_fun(*volume, &HScale::get_value)));
+		volume->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_volume), 	mem_fun(*volume, &HScale::get_value)));
 		volume->set_inverted(true);
 		
 		Frame* f_glide = new Frame("Glide");
@@ -175,11 +181,26 @@ public:
 		bg_pixbuf = Gdk::Pixbuf::create_from_file("Wood-Texture.jpg");
 		interfaz->attach(manage(bg_pixbuf));
 		*/
+		
+		Button* save = new Button("Save");
+		Button* load = new Button("Load");
+		
+		filename = new Entry();
+		
+		save->signal_clicked().connect(mem_fun(*this, &RaffoSynthGUI::save_preset));
+		
+		load->signal_clicked().connect(mem_fun(*this, &RaffoSynthGUI::load_preset));
+		
+		Table* presets = new Table(1,3);
+		presets->attach(*save, 0, 1, 0, 1);
+		presets->attach(*filename, 1, 2, 0, 1);
+		presets->attach(*load, 2, 3, 0, 1);
 
-		interfaz->attach(*f_glide, 0, 1, 0, 1);
-		interfaz->attach(*f_osc, 1, 2, 0, 1);
-		interfaz->attach(*f_mod, 2, 3, 0, 1);
-		interfaz->attach(*f_vol, 3, 4, 0, 1);
+		interfaz->attach(*f_glide, 0, 1, 1, 2);
+		interfaz->attach(*f_osc, 1, 2, 1, 2);
+		interfaz->attach(*f_mod, 2, 3, 1, 2);
+		interfaz->attach(*f_vol, 3, 4, 1, 2);
+		interfaz->attach(*presets, 2, 3, 0, 1);
 		
 		/*
 		EventBox* fondo = new EventBox();
@@ -327,42 +348,164 @@ public:
 			}
 		}
 	}
-	protected:
-
-		VScale* oscButton[4];
-
-		HScale* range[4];
-
-		HScale* oscTuning[4];
-
-		HScale* wave[4];
-
-		Label* wave_label[4];
-
-		HScale* vol[4];
-
-		HScale* filter_cutoff;
-		HScale* filter_attack;
-		HScale* filter_decay;
-		HScale* filter_sustain;
-		HScale* filter_release;
-		HScale* filter_resonance;
-
-
-		HScale* attack;
-		HScale* decay;
-		HScale* sustain;
-		HScale* release;
+	
+	// void save_file(Entry* e) {
+	// 	string s= e->get_buffer()->get_text();
+	// 	string filename = "~/.lv2/RaffoSynth/";
+	// 	filename += s;
+	// 	filename += ".txt";
+	// 	ofstream f(filename.c_str());
 		
-		VScale* glide;
-		VScale* volume;
+	// }
+	
+	void save_preset() {
+		// Dialog prompt("Preset name");
+		// Entry *entry = new Entry;
+		// prompt.add_button("Save",0);
+		// prompt.get_vbox()->pack_start(entry);
+		// prompt.signal_response().connect(bind<0>(mem_fun(*this, &RaffoSynthGUI::save_file), entry));
+		string s = PRESET_FOLDER;
+		s += filename->get_buffer()->get_text();
+		s += ".txt";
+		cout << s << endl;
+		ofstream f;
+		f.open(s.c_str());
+		for (int i = 0; i < 4; ++i)
+		{
+			f << oscButton[i]->get_value() << " ";
+			f << range[i]->get_value() << " ";
+			f << oscTuning[i]->get_value() << " ";
+			f << wave[i]->get_value() << " ";
+			f << vol[i]->get_value() << " ";
+		}
+		f << filter_cutoff->get_value() << " ";
+		f << filter_attack->get_value() << " ";
+		f << filter_decay->get_value() << " ";
+		f << filter_sustain->get_value() << " ";
+		f << filter_release->get_value() << " ";
+		f << filter_resonance->get_value() << " ";
 		
-		char* waveshapes[4] = {"Triangle", "Saw", "Square", "Pulse"};
-		//static char* format_value(GtkScale *scale, int value){
-         //   return str("-->%d<--", value);}
+		f << attack->get_value() << " ";
+		f << decay->get_value() << " ";
+		f << sustain->get_value() << " ";
+		f << release->get_value() << " ";
+		
+		f << glide->get_value() << " ";
+		f << volume->get_value() << " ";
+		
+		f.close();
+	}
+	
+	void load_preset(){
+		FileChooserDialog dialog("Select preset", FILE_CHOOSER_ACTION_OPEN);
+		dialog.add_button("_Cancel", RESPONSE_CANCEL);
+		dialog.add_button("_Open", RESPONSE_OK);
+		dialog.set_current_folder(PRESET_FOLDER);
+		if (dialog.run() != RESPONSE_OK) return;
+		
+		string filename = dialog.get_filename();
+		cout << filename << endl;
+		ifstream f;
+		f.open(filename.c_str());
+		float aux;
+		for (int i = 0; i < 4; ++i)
+		{
+			f >> aux;
+			write_control(m_oscButton0 + i, aux);
+			f >> aux;
+			cout << "range" << i << " " << aux << endl;
+			write_control(m_range0 + i, aux);
+			f >> aux;
+			write_control(m_tuning0 + i, aux);
+			f >> aux;
+			write_control(m_wave0 + i, aux);
+			f >> aux;
+			write_control(m_vol0 + i, aux);
+			// f << oscButton[i]->get_value() << endl;
+			// f << range[i]->get_value() << endl;
+			// f << oscTuning[i]->get_value() << endl;
+			// f << wave[i]->get_value() << endl;
+			// f << vol[i]->get_value() << endl;
+		}
+		f >> aux;
+		write_control(m_filter_cutoff, aux);
+		// f << filter_cutoff->get_value() << endl;
+		f >> aux;
+		write_control(m_filter_attack, aux);
+		// f << filter_attack->get_value() << endl;
+		f >> aux;
+		write_control(m_filter_decay, aux);
+		// f << filter_decay->get_value() << endl;
+		f >> aux;
+		write_control(m_filter_sustain, aux);
+		// f << filter_sustain->get_value() << endl;
+		f >> aux;
+		write_control(m_filter_release, aux);
+		// f << filter_release->get_value() << endl;
+		f >> aux;
+		write_control(m_filter_resonance, aux);
+		// f << filter_resonance->get_value() << endl;
+		
+		f >> aux;
+		write_control(m_attack, aux);
+		// f << attack->get_value() << endl;
+		f >> aux;
+		write_control(m_decay, aux);
+		// f << decay->get_value() << endl;
+		f >> aux;
+		write_control(m_sustain, aux);
+		// f << sustain->get_value() << endl;
+		f >> aux;
+		write_control(m_release, aux);
+		// f << release->get_value() << endl;
+		
+		f >> aux;
+		write_control(m_glide, aux);
+		// f << glide->get_value() << endl;
+		f >> aux;
+		write_control(m_volume, aux);
+		// f << volume->get_value() << endl;
+		
+		f.close();
+		
+	}
+protected:
 
-		
-	};
+	VScale* oscButton[4];
+
+	HScale* range[4];
+
+	HScale* oscTuning[4];
+
+	HScale* wave[4];
+
+	Label* wave_label[4];
+
+	HScale* vol[4];
+
+	HScale* filter_cutoff;
+	HScale* filter_attack;
+	HScale* filter_decay;
+	HScale* filter_sustain;
+	HScale* filter_release;
+	HScale* filter_resonance;
+
+
+	HScale* attack;
+	HScale* decay;
+	HScale* sustain;
+	HScale* release;
+	
+	VScale* glide;
+	VScale* volume;
+	
+	Entry* filename;
+	
+	char* waveshapes[4] = {"Triangle", "Saw", "Square", "Pulse"};
+	//static char* format_value(GtkScale *scale, int value){
+     //   return str("-->%d<--", value);}
+	
+};
 
 
 	static int _ = RaffoSynthGUI::register_class("http://example.org/raffo/gui");
