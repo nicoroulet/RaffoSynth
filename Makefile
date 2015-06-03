@@ -24,8 +24,8 @@ $(BUNDLE): manifest.ttl raffo.ttl raffo.so raffo_gui.so
 raffo.so: raffo.peg raffo.h tiempo.h raffo.cpp oscillators.o 
 	g++ -shared -fPIC -DPIC $(FLAGS) raffo.cpp oscillators.o `pkg-config --cflags --libs lv2-plugin` -o raffo.so
 
-oscillators_asm: oscilators.asm
-	nasm -g -f elf64 oscilators.asm -o oscillators.o
+oscillators_asm: oscillators.asm
+	nasm -g -f elf64 oscillators.asm -o oscillators.o
 	
 oscillators_c: oscillators.c
 	gcc -c -fPIC $(CFLAGS) oscillators.c -o oscillators.o
@@ -43,6 +43,6 @@ install: $(BUNDLE)
 	cp -R $(BUNDLE) $(INSTALL_DIR)
 
 clean:
-	rm -rf $(BUNDLE) raffo.so raffo_gui.so raffo.peg raffo.o oscilators.o
+	rm -rf $(BUNDLE) raffo.so raffo_gui.so raffo.peg raffo.o oscillators.o
 
 .PHONY: install clean oscillators_c oscillators_asm
