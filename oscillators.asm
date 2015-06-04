@@ -540,7 +540,9 @@ ondaTriangular:
 	imul r14d, 4	;r16d es i * 4
 	add r14d, ecx	;r16d es la posicion a escribir del buffer
 
-	addps xmm8, [r14d]		;levanto del buffer y sumo
+	movdqu xmm9, [r14d]
+	addps xmm8, xmm9
+	;addps xmm8, [r14d]		;levanto del buffer y sumo
 	movdqu [r14d], xmm8	;escribo en el buffer
 
 	;---incrementaciones
