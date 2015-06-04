@@ -1,8 +1,7 @@
-# Este es el manifest. El host que use este plugin lo va a parsear para saber de que se trata. Basicamente dice: esto es un plugin lv2, el binario esta en moog.so y hay mas data en moog.ttl. No estoy seguro de que esta sea la forma de poner un comentario asi que quizas haya que borrarlo mas tarde.
 @prefix lv2:  <http://lv2plug.in/ns/lv2core#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-<http://example.org/raffo> #hay que ver que dominio ponerle (nongnu.org?)
+<http://example.org/raffo>
 	a lv2:Plugin ;
 	lv2:binary <raffo.so> ;
 	rdfs:seeAlso <raffo.ttl> .

@@ -88,13 +88,14 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
       switch ((int)*p(m_wave0 + osc)) {
         case (0): { //triangular
           // ASM
-          // ondaTriangular(from, to, counter, buffer, subperiod, vol, env);
+          ondaTriangular(from, to, counter, buffer, subperiod, vol, env);
+          counter+= (to-from);
 
           //  C
-          for (uint32_t i = from; i < to; ++i, counter++) {
-            buffer[i] += vol * (4. * (fabs(fmod(((counter) + subperiod/4.), subperiod) /
-                              subperiod - .5)-.25)) * env;
-          }
+          // for (uint32_t i = from; i < to; ++i, counter++) {
+            // buffer[i] += (fabs(fmod((counter + subperiod/4.), subperiod) /
+            //                   subperiod - .5)-.25)) * env * 4. *vol;     
+          // }
           // zapato: la onda triangular esta hecha para que empiece continua, pero cuando se corta popea
           break;
         }
