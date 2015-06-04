@@ -11,14 +11,14 @@ align 16	;Alineo - TODO: usar movdqa para mejorar tiempocounter, subperiods
 ; cuatros: dd 4.0, 4.0, 4.0, 4.0
 cuatros: dd 4.0, 4.0, 4.0, 4.0
 medios: dd 0.5, 0.5, 0.5, 0.5
-sacadorDeSigno: dd 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF
+; sacadorDeSigno: dd 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF
 sumadorCounter: dd 0.0, 1.0, 2.0, 3.0
 medioMedios: dd 0.25, 0.25, 0.25, 0.25
 menosUnos: dd -1.0, -1.0, -1.0, -1.0
 unos: dd 1.0, 1.0, 1.0, 1.0
 dos: dd 2.0, 2.0, 2.0, 2.0
 puntoDos: dd 0.2, 0.2, 0.2, 0.2
-ceros: dd 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+ceros: dd 0.0, 0.0, 0.0, 0.0
 
 
 ;no aligned
@@ -256,7 +256,7 @@ ondaCuadrada:
 
 	pand xmm13, xmm12		;donde xmm5>= 0 hay un 0.0, donde no, hay ceros.
 
-	addps xmm5, xmm13		;donde xmm5<0 hay 1.0. donde no, hay 0.0.
+	por xmm5, xmm13		;donde xmm5<0 hay 1.0. donde no, hay 0.0.
 
 
 	mulps xmm5, xmm6		;lo multiplico por 2
@@ -388,7 +388,7 @@ ondaPulso:
 
 	pand xmm13, xmm12		;donde xmm5>= 0 hay un 0.0, donde no, hay ceros.
 
-	addps xmm5, xmm13		;donde xmm5<0 hay 1.0. donde no, hay 0.0.
+	por xmm5, xmm13		;donde xmm5<0 hay 1.0. donde no, hay 0.0.
 
 
 	mulps xmm5, xmm6		;lo multiplico por 2
@@ -420,7 +420,7 @@ ret
 
 ;void ondaTriangular(uint32_t from, uint32_t to, uint32_t counter, float* buffer, float subperiod, float vol, float env){
 ;	for (uint32_t i = from; i < to; ++i, counter++) {
-;		buffer[i] += vol * (4. * (fabs(fmod(((counter) + subperiod/4.), subperiod) /
+;		buffer[i] += vol * (4. * (fabs(fmod((counter + subperiod/4.), subperiod) /
 ;	                  subperiod - .5)-.25)) * env;
 ;	}
 ;}
@@ -432,8 +432,8 @@ ret
 	;float* buffer			ecx
 
 	;float subperiod		xmm0
-	;float vol 				xmm2 <-- corregir
-	;float env				xmm3 <-- corregir
+	;float vol 				xmm1
+	;float env				xmm2
 ondaTriangular:
 	push rbp
 	mov rbp, rsp
@@ -445,92 +445,107 @@ ondaTriangular:
 	;seteo variables
 	mov ebx, edi	;ebx es i
 
-
 	;----broadcasteo variables
 	pshufd xmm0, xmm0, 0		;broadcasteo subperiod
 
-	;muevo vol a xmm15  y broadcasteo
-	movq xmm15, xmm2
-	pshufd xmm15, xmm15, 0
+	pshufd xmm1, xmm1, 0		;broadcasteo vol
 
-	;muevo counter a xmm7, broadcasteo y lo sumo con  0 | 1 | 2 | 3
-	movd xmm7, edx
-	pshufd xmm7, xmm7, 0
-	addps xmm7, [rel sumadorCounter]
-	;----
+	pshufd xmm2, xmm2, 0		;broadcasteo env
 
+	;muevo counter a xmm3, broadcasteo y lo sumo con  0 | 1 | 2 | 3
+	movd xmm3, edx
+	pshufd xmm3, xmm3, 0
+	cvtdq2ps xmm3, xmm3
+	addps xmm3, [rel sumadorCounter]
 
-	;xmm4 va a tener cuatro subperiod/4 en floats
-	movdqa xmm4, xmm0
-	divps xmm4, [rel cuatros]
+	;----seteo constantes
 
-	;xmm5 va a tener cuatro .5 en floats
-	movdqa xmm5, [rel medios]
+	movdqu xmm4, [rel cuatros]		;xmm4 va a tener cuatro cuatros en floats
 
-	;xmm10 va a tener todo ceros
-	pxor xmm10, xmm10
-	;xmm11 va a tener todo unos
-	mov r15d, 0xFFFFFFFF
-	movd xmm11, r15d
-	pshufd xmm11, xmm11, 0
+	movdqu xmm13, xmm0
+	divps xmm13, xmm4				;xmm13 va a tener cuatro subperiod/4 en floats
+	
+	movdqa xmm5, [rel medios]		;xmm5 va a tener cuatro .5 en floats
+	
+	movdqu xmm10, [rel ceros]		;xmm10 va a tener cuatro ceros
+	
+	movdqu xmm15, [rel menosUnos]	;xmm15 va a tener cuatro -1
+
+	movdqu xmm14, [rel medioMedios]	;xmm14 va a tener cuatro .25
+
+	
+	mov r14d, 0xFFFFFFFF
+	movd xmm11, r14d
+	pshufd xmm11, xmm11, 0			;xmm11 va a tener full 1
 
 	.ciclo:
 	cmp ebx, esi		;si i es to, termino
-	je .fin
+	jae .fin
 
 
-	;subperiod/4 + counter
-	movdqa xmm6, xmm4		;xmm6 va a ser aux
-	addps xmm6, xmm7
+	;buffer[i] += vol * (4. * [fabs(fmod[(counter + subperiod/4.), subperiod] / subperiod - .5)-.25]) * env;
 
-	movdqa xmm8, xmm6		;xmm8 = xmm6, xmm8 es aux2
+	;aux = counter + subperiod/4
+	movdqu xmm6, xmm3		;xmm6 = counter
+	addps xmm6, xmm13		;xmm6 = counter + subperiod/4.
 
-		;----aux = fmod(aux, subperiod);
-	;No hay fmod, así que divido, redondeo, multiplico y resto
-	movdqu xmm9, xmm3		;xmm9 = counter
-	movdqu xmm8, xmm3		;xmm8 = counter
-	divps xmm8, xmm0		;xmm8 = counter/subperiod
-	roundps xmm8, xmm8, 3 	;xmm8 = roundps(counter, 3), trunco
-	mulps xmm8, xmm0		;xmm8 = (truncar(counter/subperiod)*subperiod)
-	subps xmm9, xmm8		;xmm9 = (counter - (truncar(counter/subperiod) *subperiod)) = fmod()
+
+	;--xmm6 = fmod(aux, subperiod)
+	;No hay fmod, así que me las arreglo:
+	;--xmm6 = (((aux/subperiod) - truncf(aux/subperiod))*subperiod)
+	divps xmm6, xmm0		;xmm6 = aux/subperiod
+	movdqu xmm8, xmm6		;xmm8 = aux/subperiod
+	
+	roundps xmm8, xmm8, 3 	;xmm8 = roundps(aux/subperiod, 3), trunco xmm8
+	
+	subps xmm6, xmm8		;xmm6 = (aux/subperiod) - truncf(aux/subperiod))
+
+	mulps xmm6, xmm0		;xmm6 = ((aux/subperiod) - truncf(aux/subperiod))*subperiod
 	;----
 
 	;aux = aux / subperiod
-	divps xmm6, xmm0
+	divps xmm6, xmm0		;todo-tachar con el mulps de arriba
 
 	;aux = aux - .5
-	subps xmm6, [rel medios]
+	subps xmm6, xmm5
 
-	;----aux = fabs(aux);
-	andps xmm6, [rel sacadorDeSigno]	;este and magico le saca el signo al float - TODO, los compiladores guardan distinto al float
-	movdqa xmm9, xmm6
-	cmpps xmm9, xmm11, 1		;es equivalente a cmpltps xmm6, [ceros] -> da unos donde era negativo
-	movdqa xmm12, xmm9			
-	pxor xmm12, xmm11			;en xmm12 tengo unos donde es positivo
+	;----xmm6 = fabs(xmm6);
+	;como no existe para simd, me las arreglo
+	movdqu xmm8, xmm6			;copio a xmm8
+	movdqu xmm13, xmm6			;copio a xmm13
 
+	cmpps xmm8, xmm10, 1		;es equivalente a cmpltps xmm8, [ceros] -> da unos donde era negativo
 
-	pand xmm9, xmm6		;en xmm9 tengo los negativos
-	pand xmm6, xmm12	;en xmm6 tengo los positivos
+	movdqu xmm9, xmm8
+	pxor xmm9, xmm11			;en xmm9 tengo unos donde era positivo
+	pand xmm9, xmm6				;en xmm9 tengo el valor donde era positivo. 0 cc
 
-;	mulps xmm9, [rel menosUnos]	 ;multiplico por -1 los que eran negativos
-	por xmm6, xmm9		;mezclo con los que ya eran positvos
+	mulps xmm13, xmm15			;en xmm13 tengo los valores multiplicados por -1
+	pand xmm8, xmm13			;en xmm8 tengo el valor multiplicado por -1, si era negativo. 0 cc
+
+	por xmm8, xmm9				;en xmm8 tengo los valores cuando eran pos, y los valores *-1 cuando eran neg
 	;----
 
-	;aux = aux - .25
-	subps xmm6, [rel medioMedios]
+	subps xmm8, xmm14	;le resto .25
 
-	;aux *= 4
-	mulps xmm6, [rel cuatros]
+	mulps xmm8, xmm4	;multiplico por 4
 
-	;aux*= vol
-	mulps xmm6, xmm3
+	mulps xmm8, xmm2	;multiplico por env
 
-	;muevo a la posicion de buffer los 4 floats procesados
-	movdqu [ecx], xmm6
+	mulps xmm8, xmm1	;multiplico por vol
 
-	;sumo 4 al i
-	add ebx, 4
-	
+	;lea r14d, [ecx + ebx *4]	;r14d es &buffer + i * 4 todo-mas eficiente
+
+	mov r14d, ebx
+	imul r14d, 4	;r16d es i * 4
+	add r14d, ecx	;r16d es la posicion a escribir del buffer
+
+	addps xmm8, [r14d]		;levanto del buffer y sumo
+	movdqu [r14d], xmm8	;escribo en el buffer
+
+	;---incrementaciones
+	addps xmm3, xmm4		;a counter le sumo 4 | 4 | 4 | 4
+	add ebx, 4					;incremento el contador i	
 	jmp .ciclo
 
 	.fin:
@@ -539,4 +554,4 @@ ondaTriangular:
 	pop r12
 	pop rbx
 	pop rbp
-	ret
+ret
