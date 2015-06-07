@@ -512,7 +512,7 @@ ondaTriangular:
 	;----xmm6 = fabs(xmm6);
 	;como no existe para simd, me las arreglo
 	movdqu xmm8, xmm6			;copio a xmm8
-	movdqu xmm13, xmm6			;copio a xmm13
+	movdqu xmm7, xmm6			;copio a xmm7
 
 	cmpps xmm8, xmm10, 1		;es equivalente a cmpltps xmm8, [ceros] -> da unos donde era negativo
 
@@ -520,8 +520,8 @@ ondaTriangular:
 	pxor xmm9, xmm11			;en xmm9 tengo unos donde era positivo
 	pand xmm9, xmm6				;en xmm9 tengo el valor donde era positivo. 0 cc
 
-	mulps xmm13, xmm15			;en xmm13 tengo los valores multiplicados por -1
-	pand xmm8, xmm13			;en xmm8 tengo el valor multiplicado por -1, si era negativo. 0 cc
+	mulps xmm7, xmm15			;en xmm7 tengo los valores multiplicados por -1
+	pand xmm8, xmm7			;en xmm8 tengo el valor multiplicado por -1, si era negativo. 0 cc
 
 	por xmm8, xmm9				;en xmm8 tengo los valores cuando eran pos, y los valores *-1 cuando eran neg
 	;----
