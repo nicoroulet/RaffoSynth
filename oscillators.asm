@@ -2,16 +2,11 @@ global ondaTriangular
 global ondaSierra
 global ondaPulso
 global ondaCuadrada
-global nada
-
-extern fprintf
 
 section .data
-align 16	;Alineo - TODO: usar movdqa para mejorar tiempocounter, subperiods
-; cuatros: dd 4.0, 4.0, 4.0, 4.0
+align 16	;Alineo
 cuatros: dd 4.0, 4.0, 4.0, 4.0
 medios: dd 0.5, 0.5, 0.5, 0.5
-; sacadorDeSigno: dd 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF
 sumadorCounter: dd 0.0, 1.0, 2.0, 3.0
 medioMedios: dd 0.25, 0.25, 0.25, 0.25
 menosUnos: dd -1.0, -1.0, -1.0, -1.0
@@ -20,13 +15,7 @@ dos: dd 2.0, 2.0, 2.0, 2.0
 puntoDos: dd 0.2, 0.2, 0.2, 0.2
 ceros: dd 0.0, 0.0, 0.0, 0.0
 
-
-;no aligned
-stringImprimirFloat: DB '%.2f', 10, 0
-
 section .text
-nada:
-ret
 
 ; byte = 8b = char
 ; word = 2B = short
@@ -319,7 +308,11 @@ ondaPulso:
 	movdqu xmm15, [rel puntoDos]	;xmm11 = 0.2 | 0.2 | 0.2 | 0.2
 	; movdqu xmm11, [rel medios]
 
-	movdqu xmm10, [rel unos]	
+	; movdqu xmm10, [rel unos]
+	movdqu xmm10, xmm15	;.2
+	addps xmm10, xmm10	;.4
+	addps xmm10, xmm10	;.8
+	addps xmm10, xmm15	;1.
 	; movdqu xmm10, xmm11
 	; addps xmm10, xmm10			;xmm10 = 1.0 | 1.0 | 1.0 | 1.0
 
@@ -328,7 +321,9 @@ ondaPulso:
 	addps xmm4, xmm4
 	addps xmm4, xmm4	;xmm4 es 4.0 | 4.0 | 4.0 | 4.0
 
-	movdqu xmm12, [rel ceros]	;xmm12 es 0.0 | 0.0 | 0.0 | 0.0
+	; movdqu xmm12, [rel ceros]	;xmm12 es 0.0 | 0.0 | 0.0 | 0.0
+	movdqu xmm12, xmm10	;1.
+	subps xmm10, xmm10	;0.
 
 	pshufd xmm0, xmm0, 0		;broadcasteo subperiod
 
@@ -459,16 +454,16 @@ ondaTriangular:
 	addps xmm3, [rel sumadorCounter]
 
 	;----seteo constantes	- en vez de hacer accesos a memoria los calculo del que tiene .25
-	movdqu xmm14, [rel medioMedios]	;xmm14 va a tener cuatro .25
+	movdqa xmm14, [rel medioMedios]	;xmm14 va a tener cuatro .25
 
 	;movdqu xmm4, [rel cuatros]		;xmm4 va a tener cuatro cuatros en floats
-	movdqu xmm4, xmm14
+	movdqa xmm4, xmm14
 	addps xmm4, xmm4		;.5
 	addps xmm4, xmm4		;1.
 	addps xmm4, xmm4		;2.
 	addps xmm4, xmm4		;4.
 
-	movdqu xmm13, xmm0
+	movdqa xmm13, xmm0
 	divps xmm13, xmm4				;xmm13 va a tener cuatro subperiod/4 en floats
 	
 
@@ -481,7 +476,7 @@ ondaTriangular:
 	subps xmm10, xmm10	;0.
 	
 	;movdqu xmm15, [rel menosUnos]	;xmm15 va a tener cuatro -1
-	movdqu xmm15, xmm5	;.5
+	movdqa xmm15, xmm5	;.5
 	subps xmm15, xmm5	;0.
 	subps xmm15, xmm5	;-.5
 	subps xmm15, xmm5	;-1.
@@ -498,7 +493,7 @@ ondaTriangular:
 	;buffer[i] += vol * (4. * [fabs(fmod[(counter + subperiod/4.), subperiod] / subperiod - .5)-.25]) * env;
 
 	;aux = counter + subperiod/4
-	movdqu xmm6, xmm3		;xmm6 = counter
+	movdqa xmm6, xmm3		;xmm6 = counter
 	addps xmm6, xmm13		;xmm6 = counter + subperiod/4.
 
 
@@ -506,7 +501,7 @@ ondaTriangular:
 	;No hay fmod, así que me las arreglo:
 	;--xmm6 = (((aux/subperiod) - truncf(aux/subperiod))*subperiod)
 	divps xmm6, xmm0		;xmm6 = aux/subperiod
-	movdqu xmm8, xmm6		;xmm8 = aux/subperiod
+	movdqa xmm8, xmm6		;xmm8 = aux/subperiod
 	
 	roundps xmm8, xmm8, 3 	;xmm8 = roundps(aux/subperiod, 3), trunco xmm8
 	
@@ -523,12 +518,12 @@ ondaTriangular:
 
 	;----xmm6 = fabs(xmm6);
 	;como no existe para simd, me las arreglo
-	movdqu xmm8, xmm6			;copio a xmm8
-	movdqu xmm7, xmm6			;copio a xmm7
+	movdqa xmm8, xmm6			;copio a xmm8
+	movdqa xmm7, xmm6			;copio a xmm7
 
 	cmpps xmm8, xmm10, 1		;es equivalente a cmpltps xmm8, [ceros] -> da unos donde era negativo
 
-	movdqu xmm9, xmm8
+	movdqa xmm9, xmm8
 	pxor xmm9, xmm11			;en xmm9 tengo unos donde era positivo
 	pand xmm9, xmm6				;en xmm9 tengo el valor donde era positivo. 0 cc
 
