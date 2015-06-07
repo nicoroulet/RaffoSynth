@@ -458,21 +458,33 @@ ondaTriangular:
 	cvtdq2ps xmm3, xmm3
 	addps xmm3, [rel sumadorCounter]
 
-	;----seteo constantes
+	;----seteo constantes	- en vez de hacer accesos a memoria los calculo del que tiene .25
+	movdqu xmm14, [rel medioMedios]	;xmm14 va a tener cuatro .25
 
-	movdqu xmm4, [rel cuatros]		;xmm4 va a tener cuatro cuatros en floats
+	;movdqu xmm4, [rel cuatros]		;xmm4 va a tener cuatro cuatros en floats
+	movdqu xmm4, xmm14
+	addps xmm4, xmm4		;.5
+	addps xmm4, xmm4		;1.
+	addps xmm4, xmm4		;2.
+	addps xmm4, xmm4		;4.
 
 	movdqu xmm13, xmm0
 	divps xmm13, xmm4				;xmm13 va a tener cuatro subperiod/4 en floats
 	
-	movdqa xmm5, [rel medios]		;xmm5 va a tener cuatro .5 en floats
-	
-	movdqu xmm10, [rel ceros]		;xmm10 va a tener cuatro ceros
-	
-	movdqu xmm15, [rel menosUnos]	;xmm15 va a tener cuatro -1
 
-	movdqu xmm14, [rel medioMedios]	;xmm14 va a tener cuatro .25
-
+	;movdqa xmm5, [rel medios]		;xmm5 va a tener cuatro .5 en floats
+	movdqa xmm5, xmm14	;.25
+	addps xmm5, xmm5	;.5	
+	
+	;movdqu xmm10, [rel ceros]		;xmm10 va a tener cuatro ceros
+	movdqa xmm10, xmm5	;.5
+	subps xmm10, xmm10	;0.
+	
+	;movdqu xmm15, [rel menosUnos]	;xmm15 va a tener cuatro -1
+	movdqu xmm15, xmm5	;.5
+	subps xmm15, xmm5	;0.
+	subps xmm15, xmm5	;-.5
+	subps xmm15, xmm5	;-1.
 	
 	mov r14d, 0xFFFFFFFF
 	movd xmm11, r14d
@@ -500,11 +512,11 @@ ondaTriangular:
 	
 	subps xmm6, xmm8		;xmm6 = (aux/subperiod) - truncf(aux/subperiod))
 
-	mulps xmm6, xmm0		;xmm6 = ((aux/subperiod) - truncf(aux/subperiod))*subperiod
+	;mulps xmm6, xmm0		;xmm6 = ((aux/subperiod) - truncf(aux/subperiod))*subperiod
 	;----
 
 	;aux = aux / subperiod
-	divps xmm6, xmm0		;todo-tachar con el mulps de arriba
+	;divps xmm6, xmm0		;se tacha con el mulps de arriba
 
 	;aux = aux - .5
 	subps xmm6, xmm5
@@ -534,11 +546,11 @@ ondaTriangular:
 
 	mulps xmm8, xmm1	;multiplico por vol
 
-	;lea r14d, [ecx + ebx *4]	;r14d es &buffer + i * 4 todo-mas eficiente
+	lea r14d, [ecx + ebx *4]	;r14d es &buffer + i * 4	 - lea es mas eficiente
 
-	mov r14d, ebx
-	imul r14d, 4	;r16d es i * 4
-	add r14d, ecx	;r16d es la posicion a escribir del buffer
+	; mov r14d, ebx
+	; imul r14d, 4	;r16d es i * 4
+	; add r14d, ecx	;r16d es la posicion a escribir del buffer
 
 	movdqu xmm9, [r14d]
 	addps xmm8, xmm9
