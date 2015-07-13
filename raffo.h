@@ -18,7 +18,6 @@ class RaffoSynth : public LV2::Plugin<RaffoSynth, LV2::URIMap<true> > //LV2::Syn
 protected:
   
   double sample_rate;
-  double dt; // (1/sample_rate)
   list<unsigned char> keys;
   uint32_t period; // periodo de la nota presionada
   float glide_period; // periodo que se esta reproduciendo
@@ -44,20 +43,7 @@ protected:
   int run_count;
 
   
-  static inline float key2hz(unsigned char key) {
-    return 8.1758 * pow(1.0594, key);
-  }
 
-  float min_fact(float a, float b) {
-    return ((fabs(a-1) > fabs(b-1))? b: a);
-  }
-
-  float envelope(int count, float a, float d, float s) { // zapato: esto seria mas eficiente con un define?
-    float c1 = (1.-s)/(2.*d);
-    float c2 = 1./(2.*a);
-    return (s - c1 * (count - a - d - fabs(count - a - d)) + 
-           (c2 + c1) * (count - a - fabs(count - a))) ;
-  }
   
   void ir(int sample_count);
 

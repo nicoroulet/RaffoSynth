@@ -17,6 +17,37 @@
 
 using namespace std;
 
+//funciones auxiliares
+static inline float key2hz(unsigned char key) {
+  return 8.1758 * pow(1.0594, key);
+}
+float min_fact(float a, float b) {
+  return ((fabs(a-1) > fabs(b-1))? b: a);
+}
+float envelope(int count, float a, float d, float s) { 
+  // adsr lineal
+  // float c1 = (1.-s)/(2.*d);
+  // float c2 = 1./(2.*a);
+  // return (s - c1 * (count - a - d - fabs(count - a - d)) + 
+  //        (c2 + c1) * (count - a - fabs(count - a))) ;
+	
+	// adsr cuadratico
+	// wolfram input: Plot[Piecewise[{{-((x-10)^2)/(10^2) +1,x<10},{(x-10-10)^2/(10^2*(1-0.7))+0.7,10<x<10+10},{0.7,x>10+10}}],{x,0,30}]
+  if (count > a+d) // si esta en fase de sustain
+  	return s;
+  if (count < a) // si esta en fase de attack
+  	return -(count-a)*(count-a)/(a*a) + 1;
+  // si esta en fase de decay
+  return (count-a-d)*(count-a-d)*(1-s)/(d*d) + s;
+}
+float inv_envelope(float env, float a) { 
+	// adsr lineal
+	// return env*a;
+	
+	// adsr cuadratico
+	return a - sqrt(-a*a*(env-1)); //-a * (a * sqrt((env+1) / (a*a)) - 1);
+}
+
 extern "C" void ondaTriangular(uint32_t from, uint32_t to, uint32_t counter, float* buffer, float subperiod, float vol, float env);
 
 extern "C" void ondaSierra(uint32_t from, uint32_t to, uint32_t counter, float* buffer, float subperiod, float vol, float env);
@@ -30,7 +61,6 @@ extern "C" void nada();
 RaffoSynth::RaffoSynth(double rate):
   Parent(m_n_ports),
   sample_rate(rate),
-  dt(1./rate),
   period(500),
   glide_period(500),
   counter(0),
@@ -40,12 +70,10 @@ RaffoSynth::RaffoSynth(double rate):
     midi_type = Parent::uri_to_id(LV2_EVENT_URI, "http://lv2plug.in/ns/ext/midi#MidiEvent"); 
     prev_vals[0] = prev_vals[1] = prev_vals[2] = prev_vals[3] = prev_vals[4] = prev_vals[5] = 0;
   }
-     
-     
+
 void RaffoSynth::render(uint32_t from, uint32_t to) {
-  //if (keys.empty()) return;
   
-   t_osc.start();
+  t_osc.start();
   // buffer en 0
   for (uint32_t i = from; i < to; ++i) p(m_output)[i] = 0;
   
@@ -55,18 +83,23 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
     glide_factor = 1;
   } else {
     glide = pow(2., (to-from) / (sample_rate * (*p(m_glide)/5.))) ;
-    glide_factor = min_fact(((glide_period < period)? glide : 1. / glide), 
-                         period/glide_period);
+    glide_factor = min_fact(((glide_period < period)? glide : 1. / glide), period/glide_period);
     glide_period *= glide_factor;
   }
   
+  if (keys.empty()) { // actualizamos los envelopes
+    envelope_count *= (pow(1.3, -pow(500, - RELEASE) * (to-from) / 256.) + 0.00052);
+    filter_count *= (pow(1.3, -pow(500, - FILTER_RELEASE) * (to-from) / 256.) + 0.00052);
+  } else {
+    envelope_count += to - from;
+    filter_count += to - from;
+  }
+  
   // osciladores
-  //int envelope_subcount;
   
   float* buffer = p(m_output);
   for (int osc = 0; osc < 4; osc++) {
     if (*p(m_oscButton0 + osc) == 1){ //Si el botón del oscilador está en 1, se ejecuta render
-      //envelope_subcount = envelope_count;
       float vol = pow(*p(m_volume) * *p(m_vol0 + osc) / 100., .5)/4; // el volumen es el cuadrado de la amplitud
       float subperiod = glide_period / (pow(2,*p(m_range0 + osc))  * pitch * pow(2, *p(m_tuning0 + osc) / 12.) ); // periodo efectivo del oscilador
     
@@ -136,8 +169,6 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
     } //Fin del if
   } //Fin del for
   t_osc.stop();
-  //counter = counter % (int)glide_period;
-  
 }
   
 void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
@@ -145,12 +176,12 @@ void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
     switch (data[0]) {
       case (0x90): { // note on
         if (keys.empty()) {
-          //envelope_count = 0;
-          if (primer_nota) {
-            glide_period = sample_rate * 4 / key2hz(data[1]); // la primera nota no tiene glide
-            primer_nota = false;
-          }
-          counter = 0;
+	        //envelope_count = 0;
+	        if (primer_nota) {
+		        glide_period = sample_rate * 4 / key2hz(data[1]); // la primera nota no tiene glide
+		        primer_nota = false;
+	        }
+	        last_val[0] = last_val[1] = last_val[2] = last_val[3] = 0.25;
         }
         keys.push_front(data[1]);
         period = sample_rate * 4 / key2hz(data[1]);
@@ -159,13 +190,13 @@ void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
       case (0x80): { // note off
         keys.remove(data[1]);
         if (keys.empty()) {
-          // poner los contadores de adsr en el lugar correcto
-          envelope_count = envelope(envelope_count, ATTACK, DECAY, SUSTAIN) * ATTACK;
-          envelope_count *= (envelope_count>0);
-          filter_count = envelope(filter_count, FILTER_ATTACK, FILTER_DECAY, FILTER_SUSTAIN) * FILTER_ATTACK;
-          filter_count *= (filter_count>0);
+        	// poner los contadores de adsr en el lugar correcto
+			    envelope_count = inv_envelope(envelope(envelope_count, ATTACK, DECAY, SUSTAIN), ATTACK);
+			    envelope_count *= (envelope_count>0);
+			    filter_count = inv_envelope(envelope(filter_count, FILTER_ATTACK, FILTER_DECAY, FILTER_SUSTAIN), FILTER_ATTACK);
+			    filter_count *= (filter_count>0);
         } else {
-          period = sample_rate * 4 / key2hz(keys.front());
+        	period = sample_rate * 4 / key2hz(keys.front());
         }
         //if (!keys.empty()) period = sample_rate * 2 / key2hz(keys.front());
         break;
@@ -174,14 +205,14 @@ void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
         /* Calculamos el factor de pitch (numero por el que multiplicar 
            la frecuencia fundamental). data[2] es el byte mas significativo, 
            data[1] el menos. El primer bit de ambos es 0, por eso << 7. 
-           pitch_width es el numero maximo de semitonos de amplitud del pitch.
+           el numero maximo de semitonos de amplitud del pitch es 2 (6=pitch_width/12).
         * Mas informacion: http://sites.uci.edu/camp2014/2014/04/30/managing-midi-pitchbend-messages/
         */
         pitch = pow(2.,(((data[2] << 7) ^ data[1]) / 8191. - 1) / 6.); 
       }  
     }
   }
-} /*handle_midi*/
+}
 
 void RaffoSynth::run(uint32_t sample_count) {
 
@@ -202,15 +233,6 @@ void RaffoSynth::run(uint32_t sample_count) {
       lv2_event_increment(&iter);
     }
     if (to > samples_done) {
-      if (keys.empty()) { // actualizamos los envelopes
-        envelope_count *= (1 - pow(RELEASE - 1, 2)) /* ((to-samples_done) / sample_count) **/ ;
-        //if (envelope_count < 0) envelope_count=0; //envelope_count *= (envelope_count > 0);
-        filter_count *= (1 - pow(FILTER_RELEASE - 1, 2));
-        //if (filter_count < 0) filter_count=0; //filter_count *= (filter_count > 0);
-      } else {
-          envelope_count += to - samples_done;
-          filter_count += to - samples_done;
-      }
       while (samples_done + max_samples < to) { // subdividimos el buffer en porciones de tamaño max_sample
         render(samples_done, samples_done + max_samples);
         samples_done += max_samples;
@@ -262,8 +284,7 @@ void RaffoSynth::ir(int sample_count) {
   float peak_b1 = - 2 * cos_peak_w0 / peak_a0;
   float peak_b2 = (1 - peak_alpha * gain_factor) / peak_a0;
 
-
-  //cout << "in: " << p(m_output)[0];cout << " out: " << p(m_output)[0] << " filter_count: " << filter_count << endl;
+  // EQ
   for (int i = 0; i < sample_count; i++) {
     //low-pass filter     
 
@@ -284,15 +305,8 @@ void RaffoSynth::ir(int sample_count) {
     prev_vals[3] = temp;
     prev_vals[4] = prev_vals[5];
     prev_vals[5] = p(m_output)[i];
-
-    // filter ads
-    // p(m_output)[i] *= env;
-    // p(m_output)[i] += (1-env) * temp;
-    // count++;
      
   }
-    
-
 }
-static int _ = RaffoSynth::register_class(m_uri);
 
+static int _ = RaffoSynth::register_class(m_uri);
