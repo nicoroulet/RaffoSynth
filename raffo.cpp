@@ -56,6 +56,8 @@ extern "C" void ondaPulso(uint32_t from, uint32_t to, uint32_t counter, float* b
 
 extern "C" void ondaCuadrada(uint32_t from, uint32_t to, uint32_t counter, float* buffer, float subperiod, float vol, float env);
 
+extern "C" void equ_asm(float* buffer, float* prev, uint32_t sample_count, float psuma0, float psuma1, float psuma2, float psuma3, float ssuma0, float ssuma1, float ssuma2, float ssuma3, float factorSuma2);
+
 extern "C" void nada();
 
 RaffoSynth::RaffoSynth(double rate):
@@ -72,7 +74,6 @@ RaffoSynth::RaffoSynth(double rate):
   }
 
 void RaffoSynth::render(uint32_t from, uint32_t to) {
-  
   t_osc.start();
   // buffer en 0
   for (uint32_t i = from; i < to; ++i) p(m_output)[i] = 0;
@@ -110,8 +111,8 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
               /\
              /  \
             /    \_______________  -> s = sustain level
-           /  
-          /
+           /                     \
+          /                       \
           |-a-|-d-|--------------|
         */
 
@@ -222,6 +223,7 @@ void RaffoSynth::run(uint32_t sample_count) {
   LV2_Event_Iterator iter;
   lv2_event_begin(&iter, reinterpret_cast<LV2_Event_Buffer*&>(Parent::m_ports[m_midi]));
 
+
   uint8_t* event_data;
   uint32_t samples_done = 0;
   while (samples_done < sample_count) {
@@ -249,12 +251,47 @@ void RaffoSynth::run(uint32_t sample_count) {
   
   // EQ 
   t_eq.start();
-  ir(sample_count);
+  equ_asm_wrapper(sample_count);
+  // ir(sample_count);
   t_eq.stop();
 
   t_run.stop();
   //cout << run_count << " " << t_run.time << " " << t_osc.time << " " << t_eq.time << endl;
 } /*run*/
+
+void RaffoSynth::equ_asm_wrapper(int sample_count){
+  //http://www.musicdsp.org/files/Audio-EQ-Cookbook.txt
+  
+  // variables precalculadas
+ 
+  float env = envelope(filter_count, FILTER_ATTACK, FILTER_DECAY, FILTER_SUSTAIN);
+  
+  float w0 = 6.28318530717959 * (*p(m_filter_cutoff) * env + 100) / sample_rate;
+  float alpha = sin(w0)/4.; // 2 * Q,  Q va a ser constante, por ahora = 2
+  float cosw0 = cos(w0);
+
+  float lpf_a0 = 1 + alpha;
+  float lpf_a1 = - 2 * cosw0 / lpf_a0;
+  float lpf_a2 = (1 - alpha) / lpf_a0;
+  float lpf_b1 = (1 - cosw0) / lpf_a0;
+  float lpf_b0 = lpf_b1 / 2;
+
+  float gain_factor = pow(10., *p(m_filter_resonance)/20.);
+  float peak_w0 = 6.28318530717959 * (*p(m_filter_cutoff) * env + 100) * 0.9 / sample_rate;
+  float peak_alpha = sin(peak_w0)/4.; // 2 * Q,  Q va a ser constante, por ahora = 2
+  float cos_peak_w0 = cos(peak_w0);
+  float peak_a0 = 1 + peak_alpha / gain_factor;
+  float peak_a1 = -2 * cos_peak_w0 / peak_a0;
+  float peak_a2 = (1 - peak_alpha / gain_factor) / peak_a0;
+  float peak_b0 = (1 + peak_alpha * gain_factor) / peak_a0;
+  float peak_b1 = - 2 * cos_peak_w0 / peak_a0;
+  float peak_b2 = (1 - peak_alpha * gain_factor) / peak_a0;
+
+  float* buffer = p(m_output);
+  float* prev = prev_vals;
+
+  equ_asm(p(m_output), prev_vals, sample_count, lpf_b0, lpf_b1, - lpf_a2, - lpf_a1, peak_b2, peak_b1, -peak_a2, -peak_a1, peak_b0);
+}
   
 void RaffoSynth::ir(int sample_count) { 
   //http://www.musicdsp.org/files/Audio-EQ-Cookbook.txt
@@ -283,6 +320,7 @@ void RaffoSynth::ir(int sample_count) {
   float peak_b0 = (1 + peak_alpha * gain_factor) / peak_a0;
   float peak_b1 = - 2 * cos_peak_w0 / peak_a0;
   float peak_b2 = (1 - peak_alpha * gain_factor) / peak_a0;
+
 
   // EQ
   for (int i = 0; i < sample_count; i++) {

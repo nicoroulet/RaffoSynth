@@ -44,7 +44,7 @@ protected:
 
   
 
-  
+  void equ_asm_wrapper(int sample_count);
   void ir(int sample_count);
 
 public:
