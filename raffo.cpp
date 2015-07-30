@@ -56,7 +56,7 @@ extern "C" void ondaPulso(uint32_t from, uint32_t to, uint32_t counter, float* b
 
 extern "C" void ondaCuadrada(uint32_t from, uint32_t to, uint32_t counter, float* buffer, float subperiod, float vol, float env);
 
-extern "C" void equ_asm(float* buffer, float* prev, uint32_t sample_count, float psuma0, float psuma1, float psuma2, float psuma3, float ssuma0, float ssuma1, float ssuma2, float ssuma3, float factorSuma2);
+extern "C" void equalizer(float* buffer, float* prev, uint32_t sample_count, float psuma0, float psuma1, float psuma2, float psuma3, float ssuma0, float ssuma1, float ssuma2, float ssuma3, float factorSuma2);
 
 extern "C" void nada();
 
@@ -251,7 +251,7 @@ void RaffoSynth::run(uint32_t sample_count) {
   
   // EQ 
   t_eq.start();
-  equ_asm_wrapper(sample_count);
+  equ_wrapper(sample_count);
   // ir(sample_count);
   t_eq.stop();
 
@@ -259,7 +259,8 @@ void RaffoSynth::run(uint32_t sample_count) {
   //cout << run_count << " " << t_run.time << " " << t_osc.time << " " << t_eq.time << endl;
 } /*run*/
 
-void RaffoSynth::equ_asm_wrapper(int sample_count){
+//equ_wrapper prepara las variables y las manda a la funcion en asm o en c (segun como se compilo)
+void RaffoSynth::equ_wrapper(int sample_count){
   //http://www.musicdsp.org/files/Audio-EQ-Cookbook.txt
   
   // variables precalculadas
@@ -290,9 +291,13 @@ void RaffoSynth::equ_asm_wrapper(int sample_count){
   float* buffer = p(m_output);
   float* prev = prev_vals;
 
-  equ_asm(p(m_output), prev_vals, sample_count, lpf_b0, lpf_b1, - lpf_a2, - lpf_a1, peak_b2, peak_b1, -peak_a2, -peak_a1, peak_b0);
+  //si se hizo make, se llama a equalizer en oscillators.c
+  //si se hizo make asm, se llama a equalizer en oscillators.asm
+  equalizer(p(m_output), prev_vals, sample_count, lpf_b0, lpf_b1, - lpf_a2, - lpf_a1, peak_b2, peak_b1, -peak_a2, -peak_a1, peak_b0);
 }
   
+
+//version original del equ, en c (no la usamos en la ultima version)
 void RaffoSynth::ir(int sample_count) { 
   //http://www.musicdsp.org/files/Audio-EQ-Cookbook.txt
   
