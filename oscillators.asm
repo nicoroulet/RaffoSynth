@@ -2,7 +2,7 @@ global ondaTriangular
 global ondaSierra
 global ondaPulso
 global ondaCuadrada
-global equ_asm
+global equalizer
 
 section .data
 align 16	;Alineo
@@ -52,7 +52,7 @@ section .text
 	;float segundasuma3		xmm7
 	;float factorSuma2		xmm8
 
-equ_asm:
+equalizer:
 	push rbp
 	mov rbp, rsp
 	push rbx		;rbx es i
