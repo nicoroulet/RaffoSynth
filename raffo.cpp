@@ -121,11 +121,11 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
 
       switch ((int)*p(m_wave0 + osc)) {
         case (0): { //triangular
-          // ASM
+          //ASM/C
           ondaTriangular(from, to, counter, buffer, subperiod, vol, env);
           counter+= (to-from);
 
-          //  C
+          //C original
           // for (uint32_t i = from; i < to; ++i, counter++) {
             // buffer[i] += (fabs(fmod((counter + subperiod/4.), subperiod) /
             //                   subperiod - .5)-.25)) * env * 4. *vol;     
@@ -134,32 +134,33 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
           break;
         }
         case (1): { //sierra
-          //ASM
+          //ASM/C
           ondaSierra(from, to, counter, buffer, subperiod, vol, env);
           counter+= (to - from);
 
-          //C
+          //C original
           // for (uint32_t i = from; i < to; i+=4, counter+=4) {
           //   buffer[i] += vol * (2. * fmod(counter, subperiod) / subperiod - 1) * env;
           // }
           break;
         }
         case (2): { //cuadrada
-          //ASM
+          //ASM/C
           ondaCuadrada(from, to, counter, buffer, subperiod, vol, env);
           counter+= (to-from);
-          //C
+
+          //C original
           // for (uint32_t i = from; i < to; ++i, counter++) {
           //   buffer[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .5) < 0)-1) * env;
           // }
           break;
         }
         case (3): { //pulso
-          //ASM
+          //ASM/C
           ondaPulso(from, to, counter, buffer, subperiod, vol, env);
           counter+= (to-from);
 
-          //C
+          //C original
           // for (uint32_t i = from; i < to; ++i, counter++) {
           //   buffer[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .2) < 0)-1) * env;
           // }

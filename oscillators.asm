@@ -63,7 +63,7 @@ equalizer:
 
 	;---------- seteo constantes------------
 
-	;limpio bits superiores
+	;------ limpio bits superiores --- (esto no hace falta)
 	; movq xmm0, xmm0
 	; movq xmm1, xmm1
 	; movq xmm2, xmm2
@@ -74,20 +74,20 @@ equalizer:
 	; movq xmm7, xmm7
 	; movq xmm8, xmm8
 
-	pxor xmm10, xmm10	; xmm10 es 0
-	mov r12d, 0xFFFFFFFF
-	movd xmm10, r12d		; xmm10 tiene un dw de unos, el resto 0
+	; pxor xmm10, xmm10	; xmm10 es 0
+	; mov r12d, 0xFFFFFFFF
+	; movd xmm10, r12d		; xmm10 tiene un dw de unos, el resto 0
 
-	pand xmm0, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm1, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm2, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm3, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm4, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm5, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm6, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm7, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm8, xmm10	; filtro todo lo que no sea el primer float
-
+	; pand xmm0, xmm10	; filtro todo lo que no sea el primer float
+	; pand xmm1, xmm10	; filtro todo lo que no sea el primer float
+	; pand xmm2, xmm10	; filtro todo lo que no sea el primer float
+	; pand xmm3, xmm10	; filtro todo lo que no sea el primer float
+	; pand xmm4, xmm10	; filtro todo lo que no sea el primer float
+	; pand xmm5, xmm10	; filtro todo lo que no sea el primer float
+	; pand xmm6, xmm10	; filtro todo lo que no sea el primer float
+	; pand xmm7, xmm10	; filtro todo lo que no sea el primer float
+	; pand xmm8, xmm10	; filtro todo lo que no sea el primer float
+	;-----------------
 
 
 	movdqu xmm9, xmm0		;xmm9 = factorsuma1
