@@ -10,9 +10,13 @@ ASMFLAGS64 = -felf64 -F dwarf
 
 #RAFFO_OBJ := if COMPILE_ASM then raffo_asm.o else raffo_c.o
 
-cpp: oscillators_c $(BUNDLE)
+cpp: oscillators_c equalizer_c $(BUNDLE)
 
-asm: oscillators_asm $(BUNDLE)
+asm: oscillators_asm equalizer_asm $(BUNDLE)
+
+equasm: oscillators_c equalizer_asm $(BUNDLE)
+
+oscasm: oscillators_asm equalizer_c $(BUNDLE)
 
 $(BUNDLE): manifest.ttl raffo.ttl raffo.so raffo_gui.so
 	rm -rf $(BUNDLE)
@@ -21,8 +25,14 @@ $(BUNDLE): manifest.ttl raffo.ttl raffo.so raffo_gui.so
 #raffo.s: raffo.peg raffo.h tiempo.h raffo_asm.o raffo.o
 #	g++ -shared -fPIC -DPIC raffo.o raffo_asm.o -o raffo.so
 
-raffo.so: raffo.peg raffo.h tiempo.h raffo.cpp oscillators.o 
-	g++ -shared -fPIC -DPIC $(FLAGS) raffo.cpp oscillators.o `pkg-config --cflags --libs lv2-plugin` -o raffo.so
+raffo.so: raffo.peg raffo.h tiempo.h raffo.cpp oscillators.o equalizer.o
+	g++ -shared -fPIC -DPIC $(FLAGS) raffo.cpp oscillators.o equalizer.o `pkg-config --cflags --libs lv2-plugin` -o raffo.so
+
+equalizer_asm: equalizer.asm
+	nasm -g -f elf64 equalizer.asm -o equalizer.o
+
+equalizer_c: equalizer.c
+	gcc -c -fPIC $(CFLAGS) equalizer.c -o equalizer.o
 
 oscillators_asm: oscillators.asm
 	nasm -g -f elf64 oscillators.asm -o oscillators.o
@@ -43,6 +53,6 @@ install: $(BUNDLE)
 	cp -R $(BUNDLE) $(INSTALL_DIR)
 
 clean:
-	rm -rf $(BUNDLE) raffo.so raffo_gui.so raffo.peg raffo.o oscillators.o
+	rm -rf $(BUNDLE) raffo.so raffo_gui.so raffo.peg raffo.o oscillators.o equalizer.o
 
-.PHONY: install clean oscillators_c oscillators_asm
+.PHONY: install clean oscillators_c oscillators_asm equalizer_c equalizer_asm
