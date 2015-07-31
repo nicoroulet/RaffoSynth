@@ -7,6 +7,7 @@
 
 #include <list>
 #include <iostream>
+#include <fstream>
 
 #include "tiempo.h"
 
@@ -41,6 +42,8 @@ protected:
   Tiempo t_osc;
   Tiempo t_eq;
   int run_count;
+  
+  ofstream output;
 
   void equ_wrapper(int sample_count);
   void ir(int sample_count);

@@ -69,7 +69,8 @@ RaffoSynth::RaffoSynth(double rate):
   glide_period(500),
   counter(0),
   pitch(1),
-  primer_nota(true)
+  primer_nota(true), 
+  output("data/oscasm_256.out")
   {
     midi_type = Parent::uri_to_id(LV2_EVENT_URI, "http://lv2plug.in/ns/ext/midi#MidiEvent"); 
     prev_vals[0] = prev_vals[1] = prev_vals[2] = prev_vals[3] = prev_vals[4] = prev_vals[5] = 0;
@@ -259,7 +260,8 @@ void RaffoSynth::run(uint32_t sample_count) {
   t_eq.stop();
 
   t_run.stop();
-  //cout << run_count << " " << t_run.time << " " << t_osc.time << " " << t_eq.time << endl;
+  if (run_count<5000)
+	  output << run_count << " " << t_run.time << " " << t_osc.time << " " << t_eq.time << endl;
 } /*run*/
 
 //equ_wrapper prepara las variables y las manda a la funcion en asm o en c (segun como se compilo)
