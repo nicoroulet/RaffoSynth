@@ -2,6 +2,7 @@ global ondaTriangular
 global ondaSierra
 global ondaPulso
 global ondaCuadrada
+global limpiarBuffer
 
 section .data
 align 16	;Alineo
@@ -16,6 +17,50 @@ puntoDos: dd 0.2, 0.2, 0.2, 0.2
 ceros: dd 0.0, 0.0, 0.0, 0.0
 
 section .text
+
+;void limpiarBuffers(uint32_t from, uint32_t to, float* buffer);
+;void limpiarBuffers
+	;uint32_i from 			edi
+	;uint32_i to 			esi
+	;float* buffer			edx
+
+limpiarBuffer:
+	push rbp
+	mov rbp, rsp
+	push rbx		;rbx es i
+	push r12		;
+	push r13		;
+	push r14		;
+
+
+	;----seteo variables
+	mov ebx, edi	;ebx es i
+
+	movdqa xmm10, [rel ceros]	;xmm10 = 0.0 | 0.0 | 0.0 | 0.0
+
+	.ciclo:
+	cmp ebx, esi		;si i es to, termino
+	jae .fin
+
+	mov r14d, ebx
+	imul r14d, 4	;r14d es i * 4
+	add r14d, edx	;r14d es la posicion a escribir del buffer
+
+	movdqu [r14d], xmm10	;guardo ceros
+
+	;---incrementaciones
+	add ebx, 4					;incremento el contador i
+	jmp .ciclo
+	.fin:
+
+	pop r14
+	pop r13
+	pop r12
+	pop rbx
+	pop rbp
+
+ret
+
 
 ; byte = 8b = char
 ; word = 2B = short

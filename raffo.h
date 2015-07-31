@@ -42,8 +42,6 @@ protected:
   Tiempo t_eq;
   int run_count;
 
-  
-
   void equ_wrapper(int sample_count);
   void ir(int sample_count);
 

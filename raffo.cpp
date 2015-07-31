@@ -58,6 +58,8 @@ extern "C" void ondaCuadrada(uint32_t from, uint32_t to, uint32_t counter, float
 
 extern "C" void equalizer(float* buffer, float* prev, uint32_t sample_count, float psuma0, float psuma1, float psuma2, float psuma3, float ssuma0, float ssuma1, float ssuma2, float ssuma3, float factorSuma2);
 
+extern "C" void limpiarBuffer(uint32_t from, uint32_t to, float* buffer);
+
 extern "C" void nada();
 
 RaffoSynth::RaffoSynth(double rate):
@@ -76,7 +78,7 @@ RaffoSynth::RaffoSynth(double rate):
 void RaffoSynth::render(uint32_t from, uint32_t to) {
   t_osc.start();
   // buffer en 0
-  for (uint32_t i = from; i < to; ++i) p(m_output)[i] = 0;
+  limpiarBuffer(from, to, p(m_output));
   
   double glide_factor;
   if (*p(m_glide) < .1) {

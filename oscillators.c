@@ -28,3 +28,7 @@ void ondaPulso(uint32_t from, uint32_t to, uint32_t counter, float* buffer, floa
 		buffer[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .2) < 0)-1) * env;
 	}
 }
+
+void limpiarBuffer(uint32_t from, uint32_t to, float* buffer){
+  for (uint32_t i = from; i < to; ++i) buffer[i] = 0;
+}
