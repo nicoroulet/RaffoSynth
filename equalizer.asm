@@ -53,7 +53,240 @@ section .text
 	;xmm12 = 0 | 0 |*(prev_vals+3) | *(prev_vals+2)
 	;xmm13 = 0 | 0 |*(prev_vals+5) | *(prev_vals+4)
 
+
+;--- el default hace sumas horizontales
 equalizer:
+	push rbp
+	mov rbp, rsp
+	push rbx		;rbx es i
+	push r12		;r12 es aux
+	push r13		;r13d es temp
+	push r14		;r14d es la posicion del buffer
+
+
+	;---------- seteo constantes------------
+
+	;------ limpio bits superiores --- (esto no hace falta)
+	; movq xmm0, xmm0
+	; movq xmm1, xmm1
+	; movq xmm2, xmm2
+	; movq xmm3, xmm3
+	; movq xmm4, xmm4
+	; movq xmm5, xmm5
+	; movq xmm6, xmm6
+	; movq xmm7, xmm7
+	; movq xmm8, xmm8
+
+	pxor xmm10, xmm10	; xmm10 es 0
+	mov r12d, 0xFFFFFFFF
+	movd xmm10, r12d		; xmm10 tiene un dw de unos, el resto 0
+
+	pand xmm0, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm1, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm2, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm3, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm4, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm5, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm6, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm7, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm8, xmm10	; filtro todo lo que no sea el primer float
+	;-----------------
+	movdqu xmm11, xmm10
+	pslldq xmm11, 4
+	por xmm10, xmm11	;xmm10 tiene un qw de unos, el resto 0
+	;-----------------
+
+
+	movdqu xmm9, xmm0		;xmm9 = factorsuma1
+
+	;primersuma
+
+						;xmm0	= 0 | 0 | 0 | primersuma0
+	pslldq xmm1, 4		;xmm1	= 0 | 0 | primersuma1 | 0
+	pslldq xmm2, 8		;xmm2	= 0 | primersuma2 | 0 | 0
+	pslldq xmm3, 12		;xmm3	= primersuma3 | 0 | 0 | 0
+
+	orps xmm0, xmm1
+	orps xmm2, xmm3
+	orps xmm0, xmm2		;xmm0 = primersuma3 | primersuma2 | primersuma1 | primersuma0
+	;acá tengo las constantes de la primer suma en horizontal
+
+
+	;segundasuma
+						;xmm4	= 0 | 0 | 0 | segundasuma0
+	pslldq xmm5, 4		;xmm5	= 0 | 0 | segundasuma1 | 0
+	pslldq xmm6, 8		;xmm6	= 0 | segundasuma2 | 0 | 0
+	pslldq xmm7, 12		;xmm7	= segundasuma3 | 0 | 0 | 0
+
+	orps xmm4, xmm5
+	orps xmm6, xmm7
+	orps xmm4, xmm6		;xmm4 = segundasuma3 | segundasuma2 | segundasuma1 | segundasuma0
+
+	;acá tengo las constantes de la segunda suma en horizontal
+	
+	movdqu xmm1, xmm9
+	movdqu xmm3, xmm8
+	movdqu xmm2, xmm4
+	;ctes:
+	; xmm0: primersuma
+	; xmm1: factorsuma1
+	; xmm2: segundasuma
+	; xmm3: factorsuma2	
+
+	;------- fin constantes ------------------ son 4
+
+	;------- levanto prev_vals
+	movdqu xmm11, [esi] ; xmm11 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
+	movdqu xmm12, xmm11	; xmm12 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
+	psrldq xmm12, 8		; xmm12 = 0 | 0 | *(prev_vals+3) | *(prev_vals+2)
+
+	pand xmm11, xmm10 	; xmm11 = 0 | 0 |*(prev_vals+1) | *(prev_vals)
+
+
+
+	movq xmm13, [esi + 16]	;xmm13 = basura | basura | *(prev_vals+5) |*(prev_vals+4)
+	pand xmm13, xmm10	; xmm13 = 0 | 0 | *(prev_vals+5) |*(prev_vals+4)
+
+
+	;------- arranca el ciclo ----------------
+	xor ebx, ebx		; i empieza en 0
+	.ciclo:
+	cmp ebx, edx		;si i es sample_count, termino
+	jae .fin
+
+	mov r14d, ebx
+	sal r14d, 2		;multiplico por 4
+	;imul r14d, 4
+	add r14d, edi	;r14d es la posicion a escribir del buffer	 - TODO - mejorar con un lea
+
+	movd xmm4, [r14d]		;levanto *buffer + i a xmm4
+
+
+	;---------- low-pass filter-------------------
+
+	;------float temp = p(m_output)[i];
+	movd r13d, xmm4
+
+	;------p(m_output)[i] *= lpf_b0;
+	mulss xmm4, xmm1
+
+	;------p(m_output)[i] +=  lpf_b0 * *(prev_vals) + lpf_b1 * *(prev_vals+1) - lpf_a2 * *(prev_vals+2) - lpf_a1 * *(prev_vals+3);
+	;movdqu xmm5, [esi]	;xmm5 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
+	movdqu xmm5, xmm12	;xmm5 = 0 | 0 | *(prev_vals+3) |*(prev_vals+2)
+	pslldq xmm5, 8		;xmm5 =  *(prev_vals+3) |*(prev_vals+2) | 0 | 0
+	por xmm5, xmm11		;xmm5 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
+
+	mulps xmm5, xmm0	;xmm5 = *(pv+3)*ps3	   |*(pv+2)*ps2	   |*(pv+1)*ps1	   |*(pv)*ps0
+
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
+
+	addss xmm4, xmm5		;xmm4 = xmm4 * lpf_b0 + lpf_b0 * *(prev_vals) + lpf_b1 * *(prev_vals+1) - lpf_a2 * *(prev_vals+2) - lpf_a1 * *(prev_vals+3)
+
+	;-------------fin operaciones sobre el output
+
+	;----- vieja forma
+	;------*prev_vals = *(prev_vals+1);
+	; mov r12d, [esi+4]		;r12d = *(prev_vals + 1)
+	; mov [esi], r12d		;*prev_vals = r12d
+
+	; xmm11 = 0 | 0 |*(prev_vals+1) | *(prev_vals)
+	;------*(prev_vals+1) = temp;
+	; mov [esi+4], r13d		;*(prev_vals + 1) = r13d
+	;----- vieja forma
+
+	;----- todo de una
+	pxor xmm15, xmm15		;xmm15 = 0
+	movd xmm15, r13d		;xmm15 = 0 | 0 | 0 | r13d
+	pslldq xmm15, 8			;xmm15 = 0 | r13d | 0 | 0
+	por xmm11, xmm15		;xmm11 = 0 | r13d | *(prev_vals+1) | *(prev_vals) 
+	psrldq xmm11, 4			;xmm11 = 0 | 0 | r13d | *(prev_vals+1)
+
+
+	;----------------- peaking EQ (resonance) ----------------
+	;-------float temp2 = p(m_output)[i];
+	movd r13d, xmm4
+
+    ;-------p(m_output)[i] *= peak_b0;
+    mulss xmm4, xmm3	;xmm4 = xmm4 * factorsuma2
+
+    ;-------p(m_output)[i] += peak_b2 * *(prev_vals+2) + peak_b1 * *(prev_vals+3) - peak_a2 * *(prev_vals+4) - peak_a1 * *(prev_vals+5);
+    ;movdqu xmm5, [esi+8]	;xmm5 = *(prev_vals+5) |*(prev_vals+4) |*(prev_vals+3) | *(prev_vals2)
+    movdqu xmm5, xmm13		;xmm5 = 0 | 0 | *(prev_vals+5) |*(prev_vals+4)
+    pslldq xmm5, 8			;xmm5 = *(prev_vals+5) |*(prev_vals+4) | 0 | 0
+    por xmm5, xmm12			;xmm5 = *(prev_vals+5) |*(prev_vals+4) |*(prev_vals+3) | *(prev_vals2)
+
+    mulps xmm5, xmm2		;xmm5 = *(pv+5)*ss3	   |*(pv+4)*ss2	   |*(pv+3)*ss1	   |*(pv+2)*ss0
+
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      |ssuma3+ssuma2|ssuma1+ssuma0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ss3+ss2+ss1+ss0
+
+	addss xmm4, xmm5		;xmm4 = xmm4 * peak_b0 + peak_b2 * *(prev_vals+2) + peak_b1 * *(prev_vals+3) - peak_a2 * *(prev_vals+4) - peak_a1 * *(prev_vals+5);
+
+	;------------------ fin operaciones sobre el output
+
+	;----- vieja forma
+    ;-------*(prev_vals+2) = *(prev_vals+3);
+    ; mov r12d, [esi+12]		;r12d = *(prev_vals+3)
+    ; mov [esi+8], r12d		;*(prev_vals+2) = r12d
+
+    ;-------*(prev_vals+3) = temp2;
+	; mov [esi+12], r13d		;*(prev_vals+3) = r13d
+	;----- vieja forma
+
+	;-------todo de una
+	pxor xmm15, xmm15		;xmm15 = 0
+	movd xmm15, r13d		;xmm15 = 0 | 0 | 0 | r13d
+	pslldq xmm15, 8			;xmm15 = 0 | r13d | 0 | 0
+	por xmm12, xmm15		;xmm11 = 0 | r13d | *(prev_vals+3) | *(prev_vals+2)
+	psrldq xmm12, 4			;xmm11 = 0 | 0 | r13d | *(prev_vals+3)
+
+
+	;-------vieja forma
+    ;-------*(prev_vals+4) = *(prev_vals+5);
+    ; mov r12d, [esi+20]		;r12d = *(prev_vals+5)
+    ; mov [esi+16], r12d		;*(prev_vals+4) = r12d
+
+    ;-------*(prev_vals+5) = p(m_output)[i];
+    ; movd [esi+20], xmm4
+    ;-------vieja forma
+
+    ;-------todo de una
+    pxor xmm15, xmm15		;xmm15 = 0
+    movd r12d, xmm4
+    movd xmm15, r12d		;xmm15 = 0 | 0 | 0 | output
+    pslldq xmm15, 8			;xmm15 = 0 | output | 0 | 0
+    por xmm13, xmm15		;xmm13 = 0 | output | *(prev_vals+5) | *(prev_vals+4)
+    psrldq xmm13, 4			;xmm13 = 0 | 0 | output| *(prev_vals+5) 
+
+
+    ;----- copio xmm4 a la direccion del buffer
+    movd [r14d], xmm4
+
+
+
+
+	;---incrementaciones
+	inc ebx					;incremento el contador i, en 1
+	jmp .ciclo
+	.fin:
+
+	;-----guardo el prev_vals modificado
+	pslldq xmm12, 8
+	por xmm12, xmm11
+	movdqu [esi], xmm12
+	movq [esi+16], xmm13
+	;---
+
+	pop r14
+	pop r13
+	pop r12
+	pop rbx
+	pop rbp
+ret
+
+
+equalizerSumasVerticales:
 	push rbp
 	mov rbp, rsp
 	push rbx		;rbx es i
@@ -301,239 +534,6 @@ equalizer:
 	pop rbx
 	pop rbp
 ret
-
-
-equalizerSumasHorizontales:
-	push rbp
-	mov rbp, rsp
-	push rbx		;rbx es i
-	push r12		;r12 es aux
-	push r13		;r13d es temp
-	push r14		;r14d es la posicion del buffer
-
-
-	;---------- seteo constantes------------
-
-	;------ limpio bits superiores --- (esto no hace falta)
-	; movq xmm0, xmm0
-	; movq xmm1, xmm1
-	; movq xmm2, xmm2
-	; movq xmm3, xmm3
-	; movq xmm4, xmm4
-	; movq xmm5, xmm5
-	; movq xmm6, xmm6
-	; movq xmm7, xmm7
-	; movq xmm8, xmm8
-
-	pxor xmm10, xmm10	; xmm10 es 0
-	mov r12d, 0xFFFFFFFF
-	movd xmm10, r12d		; xmm10 tiene un dw de unos, el resto 0
-
-	pand xmm0, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm1, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm2, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm3, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm4, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm5, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm6, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm7, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm8, xmm10	; filtro todo lo que no sea el primer float
-	;-----------------
-	movdqu xmm11, xmm10
-	pslldq xmm11, 4
-	por xmm10, xmm11	;xmm10 tiene un qw de unos, el resto 0
-	;-----------------
-
-
-	movdqu xmm9, xmm0		;xmm9 = factorsuma1
-
-	;primersuma
-
-						;xmm0	= 0 | 0 | 0 | primersuma0
-	pslldq xmm1, 4		;xmm1	= 0 | 0 | primersuma1 | 0
-	pslldq xmm2, 8		;xmm2	= 0 | primersuma2 | 0 | 0
-	pslldq xmm3, 12		;xmm3	= primersuma3 | 0 | 0 | 0
-
-	orps xmm0, xmm1
-	orps xmm2, xmm3
-	orps xmm0, xmm2		;xmm0 = primersuma3 | primersuma2 | primersuma1 | primersuma0
-	;acá tengo las constantes de la primer suma en horizontal
-
-
-	;segundasuma
-						;xmm4	= 0 | 0 | 0 | segundasuma0
-	pslldq xmm5, 4		;xmm5	= 0 | 0 | segundasuma1 | 0
-	pslldq xmm6, 8		;xmm6	= 0 | segundasuma2 | 0 | 0
-	pslldq xmm7, 12		;xmm7	= segundasuma3 | 0 | 0 | 0
-
-	orps xmm4, xmm5
-	orps xmm6, xmm7
-	orps xmm4, xmm6		;xmm4 = segundasuma3 | segundasuma2 | segundasuma1 | segundasuma0
-
-	;acá tengo las constantes de la segunda suma en horizontal
-	
-	movdqu xmm1, xmm9
-	movdqu xmm3, xmm8
-	movdqu xmm2, xmm4
-	;ctes:
-	; xmm0: primersuma
-	; xmm1: factorsuma1
-	; xmm2: segundasuma
-	; xmm3: factorsuma2	
-
-	;------- fin constantes ------------------ son 4
-
-	;------- levanto prev_vals
-	movdqu xmm11, [esi] ; xmm11 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
-	movdqu xmm12, xmm11	; xmm12 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
-	psrldq xmm12, 8		; xmm12 = 0 | 0 | *(prev_vals+3) | *(prev_vals+2)
-
-	pand xmm11, xmm10 	; xmm11 = 0 | 0 |*(prev_vals+1) | *(prev_vals)
-
-
-
-	movq xmm13, [esi + 16]	;xmm13 = basura | basura | *(prev_vals+5) |*(prev_vals+4)
-	pand xmm13, xmm10	; xmm13 = 0 | 0 | *(prev_vals+5) |*(prev_vals+4)
-
-
-	;------- arranca el ciclo ----------------
-	xor ebx, ebx		; i empieza en 0
-	.ciclo:
-	cmp ebx, edx		;si i es sample_count, termino
-	jae .fin
-
-	mov r14d, ebx
-	sal r14d, 2		;multiplico por 4
-	;imul r14d, 4
-	add r14d, edi	;r14d es la posicion a escribir del buffer	 - TODO - mejorar con un lea
-
-	movd xmm4, [r14d]		;levanto *buffer + i a xmm4
-
-
-	;---------- low-pass filter-------------------
-
-	;------float temp = p(m_output)[i];
-	movd r13d, xmm4
-
-	;------p(m_output)[i] *= lpf_b0;
-	mulss xmm4, xmm1
-
-	;------p(m_output)[i] +=  lpf_b0 * *(prev_vals) + lpf_b1 * *(prev_vals+1) - lpf_a2 * *(prev_vals+2) - lpf_a1 * *(prev_vals+3);
-	;movdqu xmm5, [esi]	;xmm5 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
-	movdqu xmm5, xmm12	;xmm5 = 0 | 0 | *(prev_vals+3) |*(prev_vals+2)
-	pslldq xmm5, 8		;xmm5 =  *(prev_vals+3) |*(prev_vals+2) | 0 | 0
-	por xmm5, xmm11		;xmm5 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
-
-	mulps xmm5, xmm0	;xmm5 = *(pv+3)*ps3	   |*(pv+2)*ps2	   |*(pv+1)*ps1	   |*(pv)*ps0
-
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
-
-	addss xmm4, xmm5		;xmm4 = xmm4 * lpf_b0 + lpf_b0 * *(prev_vals) + lpf_b1 * *(prev_vals+1) - lpf_a2 * *(prev_vals+2) - lpf_a1 * *(prev_vals+3)
-
-	;-------------fin operaciones sobre el output
-
-	;----- vieja forma
-	;------*prev_vals = *(prev_vals+1);
-	; mov r12d, [esi+4]		;r12d = *(prev_vals + 1)
-	; mov [esi], r12d		;*prev_vals = r12d
-
-	; xmm11 = 0 | 0 |*(prev_vals+1) | *(prev_vals)
-	;------*(prev_vals+1) = temp;
-	; mov [esi+4], r13d		;*(prev_vals + 1) = r13d
-	;----- vieja forma
-
-	;----- todo de una
-	pxor xmm15, xmm15		;xmm15 = 0
-	movd xmm15, r13d		;xmm15 = 0 | 0 | 0 | r13d
-	pslldq xmm15, 8			;xmm15 = 0 | r13d | 0 | 0
-	por xmm11, xmm15		;xmm11 = 0 | r13d | *(prev_vals+1) | *(prev_vals) 
-	psrldq xmm11, 4			;xmm11 = 0 | 0 | r13d | *(prev_vals+1)
-
-
-	;----------------- peaking EQ (resonance) ----------------
-	;-------float temp2 = p(m_output)[i];
-	movd r13d, xmm4
-
-    ;-------p(m_output)[i] *= peak_b0;
-    mulss xmm4, xmm3	;xmm4 = xmm4 * factorsuma2
-
-    ;-------p(m_output)[i] += peak_b2 * *(prev_vals+2) + peak_b1 * *(prev_vals+3) - peak_a2 * *(prev_vals+4) - peak_a1 * *(prev_vals+5);
-    ;movdqu xmm5, [esi+8]	;xmm5 = *(prev_vals+5) |*(prev_vals+4) |*(prev_vals+3) | *(prev_vals2)
-    movdqu xmm5, xmm13		;xmm5 = 0 | 0 | *(prev_vals+5) |*(prev_vals+4)
-    pslldq xmm5, 8			;xmm5 = *(prev_vals+5) |*(prev_vals+4) | 0 | 0
-    por xmm5, xmm12			;xmm5 = *(prev_vals+5) |*(prev_vals+4) |*(prev_vals+3) | *(prev_vals2)
-
-    mulps xmm5, xmm2		;xmm5 = *(pv+5)*ss3	   |*(pv+4)*ss2	   |*(pv+3)*ss1	   |*(pv+2)*ss0
-
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |ssuma3+ssuma2|ssuma1+ssuma0
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ss3+ss2+ss1+ss0
-
-	addss xmm4, xmm5		;xmm4 = xmm4 * peak_b0 + peak_b2 * *(prev_vals+2) + peak_b1 * *(prev_vals+3) - peak_a2 * *(prev_vals+4) - peak_a1 * *(prev_vals+5);
-
-	;------------------ fin operaciones sobre el output
-
-	;----- vieja forma
-    ;-------*(prev_vals+2) = *(prev_vals+3);
-    ; mov r12d, [esi+12]		;r12d = *(prev_vals+3)
-    ; mov [esi+8], r12d		;*(prev_vals+2) = r12d
-
-    ;-------*(prev_vals+3) = temp2;
-	; mov [esi+12], r13d		;*(prev_vals+3) = r13d
-	;----- vieja forma
-
-	;-------todo de una
-	pxor xmm15, xmm15		;xmm15 = 0
-	movd xmm15, r13d		;xmm15 = 0 | 0 | 0 | r13d
-	pslldq xmm15, 8			;xmm15 = 0 | r13d | 0 | 0
-	por xmm12, xmm15		;xmm11 = 0 | r13d | *(prev_vals+3) | *(prev_vals+2)
-	psrldq xmm12, 4			;xmm11 = 0 | 0 | r13d | *(prev_vals+3)
-
-
-	;-------vieja forma
-    ;-------*(prev_vals+4) = *(prev_vals+5);
-    ; mov r12d, [esi+20]		;r12d = *(prev_vals+5)
-    ; mov [esi+16], r12d		;*(prev_vals+4) = r12d
-
-    ;-------*(prev_vals+5) = p(m_output)[i];
-    ; movd [esi+20], xmm4
-    ;-------vieja forma
-
-    ;-------todo de una
-    pxor xmm15, xmm15		;xmm15 = 0
-    movd r12d, xmm4
-    movd xmm15, r12d		;xmm15 = 0 | 0 | 0 | output
-    pslldq xmm15, 8			;xmm15 = 0 | output | 0 | 0
-    por xmm13, xmm15		;xmm13 = 0 | output | *(prev_vals+5) | *(prev_vals+4)
-    psrldq xmm13, 4			;xmm13 = 0 | 0 | output| *(prev_vals+5) 
-
-
-    ;----- copio xmm4 a la direccion del buffer
-    movd [r14d], xmm4
-
-
-
-
-	;---incrementaciones
-	inc ebx					;incremento el contador i, en 1
-	jmp .ciclo
-	.fin:
-
-	;-----guardo el prev_vals modificado
-	pslldq xmm12, 8
-	por xmm12, xmm11
-	movdqu [esi], xmm12
-	movq [esi+16], xmm13
-	;---
-
-	pop r14
-	pop r13
-	pop r12
-	pop rbx
-	pop rbp
-ret
-
-
 
 
 equalizerPrevEnMemoria:
