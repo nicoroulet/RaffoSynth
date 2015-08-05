@@ -13,6 +13,8 @@ dos: dd 2.0, 2.0, 2.0, 2.0
 puntoDos: dd 0.2, 0.2, 0.2, 0.2
 ceros: dd 0.0, 0.0, 0.0, 0.0
 
+unDos: dd 2.0
+
 
 
 section .text
@@ -37,7 +39,7 @@ section .text
 	;float* buffer 			edi
 	;float* prev 			esi
 	;int sample_count		edx
-  	;equ_asm(buffer, prev, sample_count, lpf_b0, lpf_b1, - lpf_a2, - lpf_a1, peak_b2, peak_b1, -peak_a2, -peak_a1, peak_b0);
+  	;equ_asm(buffer, prev, sample_count, lpf_b0, lpf_b1 (este en realidad no lo paso), - lpf_a2, - lpf_a1, peak_b2, peak_b1, -peak_a2, -peak_a1, peak_b0);
 
 	;float primersuma0		xmm0 - tambien factorsuma1
 	;float primersuma1 		xmm1
@@ -65,20 +67,22 @@ equalizer:
 
 	;---------- seteo constantes------------
 
-	;------ limpio bits superiores --- (esto no hace falta)
-	; movq xmm0, xmm0
-	; movq xmm1, xmm1
-	; movq xmm2, xmm2
-	; movq xmm3, xmm3
-	; movq xmm4, xmm4
-	; movq xmm5, xmm5
-	; movq xmm6, xmm6
-	; movq xmm7, xmm7
-	; movq xmm8, xmm8
-
+	;------ limpio bits superiores ---
 	pxor xmm10, xmm10	; xmm10 es 0
 	mov r12d, 0xFFFFFFFF
 	movd xmm10, r12d		; xmm10 tiene un dw de unos, el resto 0
+
+	;desplazo todos un xmm a la derecha - pequeño parche porque estaba mal la calling convention
+	movdqu xmm8, xmm7
+	movdqu xmm7, xmm6
+	movdqu xmm6, xmm5
+	movdqu xmm5, xmm4
+	movdqu xmm4, xmm3
+	movdqu xmm3, xmm2
+	movdqu xmm2, xmm1
+	
+	movdqu xmm1, xmm0		;en xmm0 tendré lo mismo que en el 1
+	mulss xmm1, [rel unDos]	;lo multiplico por dos, porque float psuma1 = psuma0 *2;
 
 	pand xmm0, xmm10	; filtro todo lo que no sea el primer float - todo sacar, no hace falta
 	pand xmm1, xmm10	; filtro todo lo que no sea el primer float
@@ -315,6 +319,10 @@ equalizer:
 	pop rbp
 ret
 
+;------------------------------------------------------------------------------------------
+;---------------------------------- VERSIONES ANTERIORES ----------------------------------
+;------------------------------------------------------------------------------------------
+
 ;versión con 1/4 de accesos. prev en registro, y con loopunrolled
 equalizerLoopUnrolled:
 	push rbp
@@ -330,6 +338,18 @@ equalizerLoopUnrolled:
 	pxor xmm10, xmm10	; xmm10 es 0
 	mov r12d, 0xFFFFFFFF
 	movd xmm10, r12d		; xmm10 tiene un dw de unos, el resto 0
+
+	;desplazo todos un xmm a la derecha - pequeño parche porque estaba mal la calling convention
+	movdqu xmm8, xmm7
+	movdqu xmm7, xmm6
+	movdqu xmm6, xmm5
+	movdqu xmm5, xmm4
+	movdqu xmm4, xmm3
+	movdqu xmm3, xmm2
+	movdqu xmm2, xmm1
+	
+	movdqu xmm1, xmm0		;en xmm0 tendré lo mismo que en el 1
+	mulss xmm1, [rel unDos]	;lo multiplico por dos, porque float psuma1 = psuma0 *2;
 
 	pand xmm0, xmm10	; filtro todo lo que no sea el primer float - todo sacar, no hace falta
 	pand xmm1, xmm10	; filtro todo lo que no sea el primer float
@@ -790,20 +810,23 @@ equalizerCuatroAccesos:
 
 	;---------- seteo constantes------------
 
-	;------ limpio bits superiores --- (esto no hace falta)
-	; movq xmm0, xmm0
-	; movq xmm1, xmm1
-	; movq xmm2, xmm2
-	; movq xmm3, xmm3
-	; movq xmm4, xmm4
-	; movq xmm5, xmm5
-	; movq xmm6, xmm6
-	; movq xmm7, xmm7
-	; movq xmm8, xmm8
+	;------ limpio bits superiores --- 
 
 	pxor xmm10, xmm10	; xmm10 es 0
 	mov r12d, 0xFFFFFFFF
 	movd xmm10, r12d		; xmm10 tiene un dw de unos, el resto 0
+
+	;desplazo todos un xmm a la derecha - pequeño parche porque estaba mal la calling convention
+	movdqu xmm8, xmm7
+	movdqu xmm7, xmm6
+	movdqu xmm6, xmm5
+	movdqu xmm5, xmm4
+	movdqu xmm4, xmm3
+	movdqu xmm3, xmm2
+	movdqu xmm2, xmm1
+	
+	movdqu xmm1, xmm0		;en xmm0 tendré lo mismo que en el 1
+	mulss xmm1, [rel unDos]	;lo multiplico por dos, porque float psuma1 = psuma0 *2;
 
 	pand xmm0, xmm10	; filtro todo lo que no sea el primer float
 	pand xmm1, xmm10	; filtro todo lo que no sea el primer float
@@ -1023,20 +1046,22 @@ equalizerSumasVerticales:
 
 	;---------- seteo constantes------------
 
-	;------ limpio bits superiores --- (esto no hace falta)
-	; movq xmm0, xmm0
-	; movq xmm1, xmm1
-	; movq xmm2, xmm2
-	; movq xmm3, xmm3
-	; movq xmm4, xmm4
-	; movq xmm5, xmm5
-	; movq xmm6, xmm6
-	; movq xmm7, xmm7
-	; movq xmm8, xmm8
-
+	;------ limpio bits superiores ---
 	pxor xmm10, xmm10	; xmm10 es 0
 	mov r12d, 0xFFFFFFFF
 	movd xmm10, r12d		; xmm10 tiene un dw de unos, el resto 0
+
+	;desplazo todos un xmm a la derecha - pequeño parche porque estaba mal la calling convention
+	movdqu xmm8, xmm7
+	movdqu xmm7, xmm6
+	movdqu xmm6, xmm5
+	movdqu xmm5, xmm4
+	movdqu xmm4, xmm3
+	movdqu xmm3, xmm2
+	movdqu xmm2, xmm1
+	
+	movdqu xmm1, xmm0		;en xmm0 tendré lo mismo que en el 1
+	mulss xmm1, [rel unDos]	;lo multiplico por dos, porque float psuma1 = psuma0 *2;
 
 	pand xmm0, xmm10	; filtro todo lo que no sea el primer float
 	pand xmm1, xmm10	; filtro todo lo que no sea el primer float
@@ -1273,20 +1298,22 @@ equalizerPrevEnMemoria:
 
 	;---------- seteo constantes------------
 
-	;------ limpio bits superiores --- (esto no hace falta)
-	; movq xmm0, xmm0
-	; movq xmm1, xmm1
-	; movq xmm2, xmm2
-	; movq xmm3, xmm3
-	; movq xmm4, xmm4
-	; movq xmm5, xmm5
-	; movq xmm6, xmm6
-	; movq xmm7, xmm7
-	; movq xmm8, xmm8
-
+	;------ limpio bits superiores ---------
 	pxor xmm10, xmm10	; xmm10 es 0
 	mov r12d, 0xFFFFFFFF
 	movd xmm10, r12d		; xmm10 tiene un dw de unos, el resto 0
+
+	;desplazo todos un xmm a la derecha - pequeño parche porque estaba mal la calling convention
+	movdqu xmm8, xmm7
+	movdqu xmm7, xmm6
+	movdqu xmm6, xmm5
+	movdqu xmm5, xmm4
+	movdqu xmm4, xmm3
+	movdqu xmm3, xmm2
+	movdqu xmm2, xmm1
+	
+	movdqu xmm1, xmm0		;en xmm0 tendré lo mismo que en el 1
+	mulss xmm1, [rel unDos]	;lo multiplico por dos, porque float psuma1 = psuma0 *2;
 
 	pand xmm0, xmm10	; filtro todo lo que no sea el primer float
 	pand xmm1, xmm10	; filtro todo lo que no sea el primer float

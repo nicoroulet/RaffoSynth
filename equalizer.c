@@ -2,7 +2,8 @@
 #include <math.h>
 
 //hace lo mismo que la versión en asm
-void equalizer(float* buffer, float* prev_vals, uint32_t sample_count, float psuma0, float psuma1, float psuma2, float psuma3, float ssuma0, float ssuma1, float ssuma2, float ssuma3, float factorSuma2){
+void equalizer(float* buffer, float* prev_vals, uint32_t sample_count, float psuma0, float psuma2, float psuma3, float ssuma0, float ssuma1, float ssuma2, float ssuma3, float factorSuma2){
+    float psuma1 = psuma0 *2;
   for (int i = 0; i < sample_count; i++) {
     //low-pass filter    
 

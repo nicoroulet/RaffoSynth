@@ -56,7 +56,7 @@ extern "C" void ondaPulso(uint32_t from, uint32_t to, uint32_t counter, float* b
 
 extern "C" void ondaCuadrada(uint32_t from, uint32_t to, uint32_t counter, float* buffer, float subperiod, float vol, float env);
 
-extern "C" void equalizer(float* buffer, float* prev, uint32_t sample_count, float psuma0, float psuma1, float psuma2, float psuma3, float ssuma0, float ssuma1, float ssuma2, float ssuma3, float factorSuma2);
+extern "C" void equalizer(float* buffer, float* prev, uint32_t sample_count, float psuma0, float psuma2, float psuma3, float ssuma0, float ssuma1, float ssuma2, float ssuma3, float factorSuma2);
 
 extern "C" void limpiarBuffer(uint32_t from, uint32_t to, float* buffer);
 
@@ -298,7 +298,8 @@ void RaffoSynth::equ_wrapper(int sample_count){
 
   //si se hizo make, se llama a equalizer en oscillators.c
   //si se hizo make asm, se llama a equalizer en oscillators.asm
-  equalizer(p(m_output), prev_vals, sample_count, lpf_b0, lpf_b1, - lpf_a2, - lpf_a1, peak_b2, peak_b1, -peak_a2, -peak_a1, peak_b0);
+  // equalizer(p(m_output), prev_vals, sample_count, lpf_b0, lpf_b1, - lpf_a2, - lpf_a1, peak_b2, peak_b1, -peak_a2, -peak_a1, peak_b0);
+  equalizer(p(m_output), prev_vals, sample_count, lpf_b0, - lpf_a2, - lpf_a1, peak_b2, peak_b1, -peak_a2, -peak_a1, peak_b0);
 }
   
 
