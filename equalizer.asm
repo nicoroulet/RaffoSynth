@@ -84,15 +84,15 @@ equalizer:
 	movdqu xmm1, xmm0		;en xmm0 tendré lo mismo que en el 1
 	mulss xmm1, [rel unDos]	;lo multiplico por dos, porque float psuma1 = psuma0 *2;
 
-	pand xmm0, xmm10	; filtro todo lo que no sea el primer float - todo sacar, no hace falta
-	pand xmm1, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm2, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm3, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm4, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm5, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm6, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm7, xmm10	; filtro todo lo que no sea el primer float
-	pand xmm8, xmm10	; filtro todo lo que no sea el primer float
+	; pand xmm0, xmm10	; filtro todo lo que no sea el primer float - todo sacar, no hace falta
+	; pand xmm1, xmm10	; filtro todo lo que no sea el primer float
+	; pand xmm2, xmm10	; filtro todo lo que no sea el primer float
+	; pand xmm3, xmm10	; filtro todo lo que no sea el primer float
+	; pand xmm4, xmm10	; filtro todo lo que no sea el primer float
+	; pand xmm5, xmm10	; filtro todo lo que no sea el primer float
+	; pand xmm6, xmm10	; filtro todo lo que no sea el primer float
+	; pand xmm7, xmm10	; filtro todo lo que no sea el primer float
+	; pand xmm8, xmm10	; filtro todo lo que no sea el primer float
 	;----------------.
 	;-----------------
 
@@ -144,7 +144,7 @@ equalizer:
 	;------- fin constantes ------------------ 
 
 	;------- levanto prev_vals
-	movdqu xmm11, [esi] ; xmm11 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
+	movdqu xmm11, [rdi] ; xmm11 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
 	movdqu xmm12, xmm11	; xmm12 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
 	psrldq xmm12, 8		; xmm12 = 0 | 0 | *(prev_vals+3) | *(prev_vals+2)
 
@@ -152,23 +152,23 @@ equalizer:
 
 
 
-	movq xmm13, [esi + 16]	;xmm13 = basura | basura | *(prev_vals+5) |*(prev_vals+4)
+	movq xmm13, [rdi + 16]	;xmm13 = basura | basura | *(prev_vals+5) |*(prev_vals+4)
 	pand xmm13, xmm10	; xmm13 = 0 | 0 | *(prev_vals+5) |*(prev_vals+4)
 
 
 	;------- arranca el ciclo grande ----------------
-	xor ebx, ebx		; i empieza en 0
+	xor rbx, rbx		; i empieza en 0
 	.cicloGrande:
-	cmp ebx, edx		;si i es sample_count, termino
+	cmp edx, edx		;si i es sample_count, termino
 	jae .finGrande
 
-	mov r14d, ebx
-	sal r14d, 2		;multiplico por 4
+	mov r14, rbx
+	sal r14, 2		;multiplico por 4
 	;imul r14d, 4
-	add r14d, edi	;r14d es la posicion a escribir del buffer	 - TODO - mejorar con un lea
-	; lea r14d, [ebx*4 + edi]		- con el lea termino dando peor - creo que es porque hago un acceso ahi abajo, y ambos usan el bus de direcciones
+	add r14, rdi	;r14d es la posicion a escribir del buffer	 - TODO - mejorar con un lea
+	; lea r14d, [rbx*4 + rdi]		- con el lea termino dando peor - creo que es porque hago un acceso ahi abajo, y ambos usan el bus de direcciones
 
-	movdqu xmm9, [r14d]		;levanto *buffer + i a xmm9. xmm9 va a tener TODA la entrada
+	movdqu xmm9, [r14]		;levanto *buffer + i a xmm9. xmm9 va a tener TODA la entrada
 	movdqu xmm4, xmm9		;copio toda la entrada a xmm4
 	pand xmm4, xmm7		;limpio la parte superior. solo queda la primer entrada
 
@@ -297,7 +297,7 @@ equalizer:
     ;-------fin ciclo chico
 
     ;----- copio xmm8 a la direccion del buffer
-    movdqu [r14d], xmm8
+    movdqu [r14], xmm8
 
 
 	;---incrementaciones
@@ -308,8 +308,8 @@ equalizer:
 	;-----guardo el prev_vals modificado
 	pslldq xmm12, 8
 	por xmm12, xmm11
-	movdqu [esi], xmm12
-	movq [esi+16], xmm13
+	movdqu [rsi], xmm12
+	movq [rsi+16], xmm13
 	;---
 
 	pop r14

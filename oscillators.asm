@@ -22,7 +22,7 @@ section .text
 ;void limpiarBuffers
 	;uint32_i from 			edi
 	;uint32_i to 			esi
-	;float* buffer			edx
+	;float* buffer			rdx
 
 limpiarBuffer:
 	push rbp
@@ -44,9 +44,9 @@ limpiarBuffer:
 
 	mov r14d, ebx
 	imul r14d, 4	;r14d es i * 4
-	add r14d, edx	;r14d es la posicion a escribir del buffer
+	add r14, rdx	;r14d es la posicion a escribir del buffer
 
-	movdqu [r14d], xmm10	;guardo ceros
+	movdqu [r14], xmm10	;guardo ceros
 
 	;---incrementaciones
 	add ebx, 4					;incremento el contador i
@@ -87,7 +87,7 @@ ret
 	;uint32_i from 			edi
 	;uint32_i to 			esi
 	;uint32_t counter		edx
-	;float* buffer			ecx
+	;float* buffer			rcx
 
 	;float subperiod		xmm0
 	;float vol 				xmm1
@@ -139,9 +139,9 @@ ondaSierra:
 
 	mov r14d, ebx
 	imul r14d, 4	;r16d es i * 4
-	add r14d, ecx	;r16d es la posicion a escribir del buffer
+	add r14, rcx	;r16d es la posicion a escribir del buffer
 
-	movdqu xmm7, [r14d]		;levanto *buffer + i a xmm7
+	movdqu xmm7, [r14]		;levanto *buffer + i a xmm7
 
 	;---en xmm5 calculo el valor a sumarle a buffer
 
@@ -171,7 +171,7 @@ ondaSierra:
 
 	;---counter = xmm7 + xmm5
 	addps xmm5, xmm7		;le agrego el previo valor del buffer
-	movdqu [r14d], xmm5		;guardo
+	movdqu [r14], xmm5		;guardo
 
 	;---incrementaciones
 	addps xmm3, xmm4		;a counter le sumo 4 | 4 | 4 | 4
@@ -197,7 +197,7 @@ ret
 	;uint32_i from 			edi
 	;uint32_i to 			esi
 	;uint32_t counter		edx
-	;float* buffer			ecx
+	;float* buffer			rcx
 
 	;float subperiod		xmm0
 	;float vol 				xmm1
@@ -257,9 +257,9 @@ ondaCuadrada:
 
 	mov r14d, ebx
 	imul r14d, 4	;r16d es i * 4
-	add r14d, ecx	;r16d es la posicion a escribir del buffer
+	add r14, rcx	;r16d es la posicion a escribir del buffer
 
-	movdqu xmm7, [r14d]		;levanto *buffer + i a xmm7
+	movdqu xmm7, [r14]		;levanto *buffer + i a xmm7
 
 	;---en xmm5 calculo el valor a sumarle a buffer
 
@@ -304,7 +304,7 @@ ondaCuadrada:
 
 	;---counter = xmm7 + xmm5
 	addps xmm5, xmm7		;le agrego el previo valor del buffer
-	movdqu [r14d], xmm5		;guardo
+	movdqu [r14], xmm5		;guardo
 
 	;---incrementaciones
 	addps xmm3, xmm4		;a counter le sumo 4 | 4 | 4 | 4
@@ -393,9 +393,9 @@ ondaPulso:
 
 	mov r14d, ebx
 	imul r14d, 4	;r16d es i * 4
-	add r14d, ecx	;r16d es la posicion a escribir del buffer
+	add r14, rcx	;r16d es la posicion a escribir del buffer
 
-	movdqu xmm7, [r14d]		;levanto *buffer + i a xmm7
+	movdqu xmm7, [r14]		;levanto *buffer + i a xmm7
 
 	;---en xmm5 calculo el valor a sumarle a buffer
 
@@ -440,7 +440,7 @@ ondaPulso:
 
 	;---counter = xmm7 + xmm5
 	addps xmm5, xmm7		;le agrego el previo valor del buffer
-	movdqu [r14d], xmm5		;guardo
+	movdqu [r14], xmm5		;guardo
 
 	;---incrementaciones
 	addps xmm3, xmm4		;a counter le sumo 4 | 4 | 4 | 4
@@ -586,16 +586,16 @@ ondaTriangular:
 
 	mulps xmm8, xmm1	;multiplico por vol
 
-	lea r14d, [ecx + ebx *4]	;r14d es &buffer + i * 4	 - lea es mas eficiente
+	lea r14, [rcx + rbx *4]	;r14d es &buffer + i * 4	 - lea es mas eficiente
 
 	; mov r14d, ebx
 	; imul r14d, 4	;r16d es i * 4
 	; add r14d, ecx	;r16d es la posicion a escribir del buffer
 
-	movdqu xmm9, [r14d]
+	movdqu xmm9, [r14]
 	addps xmm8, xmm9
 	;addps xmm8, [r14d]		;levanto del buffer y sumo
-	movdqu [r14d], xmm8	;escribo en el buffer
+	movdqu [r14], xmm8	;escribo en el buffer
 
 	;---incrementaciones
 	addps xmm3, xmm4		;a counter le sumo 4 | 4 | 4 | 4
