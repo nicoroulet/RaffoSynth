@@ -1,7 +1,8 @@
 moog
 ====
 
-Este moog la rompe vieja
-
 Dependencias:
-Para compilar hace falta la librería lv2-c++-tools
+Para compilar hace falta:
+	- lv2-c++-tools
+	- lv2peg
+	-

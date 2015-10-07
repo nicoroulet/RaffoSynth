@@ -49,7 +49,8 @@ raffo.peg: raffo.ttl
 	
 install: $(BUNDLE)
 	mkdir -p $(INSTALL_DIR)
-	rm -rf $(INSTALL_DIR)/$(BUNDLE)
+	rm -f $(INSTALL_DIR)/$(BUNDLE)/*.so $(INSTALL_DIR)/$(BUNDLE)/*.ttl
+	mkdir -p -m=777 $(INSTALL_DIR)/$(BUNDLE)/presets
 	cp -R $(BUNDLE) $(INSTALL_DIR)
 
 clean:
