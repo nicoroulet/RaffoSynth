@@ -368,6 +368,7 @@ void RaffoSynthGUI::load_preset(){
 	FileChooserDialog dialog("Select preset", FILE_CHOOSER_ACTION_OPEN);
 	dialog.add_button("_Cancel", RESPONSE_CANCEL);
 	dialog.add_button("_Open", RESPONSE_OK);
+	dialog.add_shortcut_folder(PRESET_FOLDER);
 	dialog.set_current_folder(PRESET_FOLDER);
 	if (dialog.run() != RESPONSE_OK) return;
 	
