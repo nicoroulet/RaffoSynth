@@ -151,7 +151,7 @@
 	lv2:name "Range Osc2";
 	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
-	lv2:default 2;
+	lv2:default 1;
 	lv2:minimum 1;
 	lv2:maximum 6;
 	lv2:scalePoint [ rdf:value 1; rdfs:label "32'" ];
@@ -194,7 +194,7 @@
 	lv2:name "Volume 1";
 	lv2:minimum 0; 
 	lv2:maximum 10.01;
-	lv2:default 7;
+	lv2:default 5;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -203,7 +203,7 @@
 	lv2:name "Volume 2";
 	lv2:minimum 0; 
 	lv2:maximum 10.01;
-	lv2:default 7;
+	lv2:default 4;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -221,7 +221,7 @@
 	lv2:index 15;
 	lv2:symbol "attack";
 	lv2:name "Attack";
-	lv2:minimum 0; 
+	lv2:minimum 100; 
 	lv2:maximum 1000.01;
 	lv2:default 0;
   ],
@@ -232,7 +232,7 @@
 	lv2:name "Decay";
 	lv2:minimum 0; 
 	lv2:maximum 1000.01;
-	lv2:default 0;
+	lv2:default 200;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -241,7 +241,7 @@
 	lv2:name "Sustain";
 	lv2:minimum 0; 
 	lv2:maximum 1.01;
-	lv2:default 1;
+	lv2:default 0.8;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -250,7 +250,7 @@
 	lv2:name "Release";
 	lv2:minimum 0.01; 
 	lv2:maximum 1.01;
-	lv2:default 0.01;
+	lv2:default 0.4;
   ],
   
   
@@ -261,7 +261,7 @@
 	lv2:name "Cutoff";
 	lv2:minimum 500; 
 	lv2:maximum 10000.02;
-	lv2:default 50;
+	lv2:default 3000;
 	#lv2:PortProperty pprops:logarithmic;
   ],
   [
@@ -271,7 +271,7 @@
 	lv2:name "Filter Attack";
 	lv2:minimum 0; 
 	lv2:maximum 1000.01;
-	lv2:default 0;
+	lv2:default 200;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -280,7 +280,7 @@
 	lv2:name "Filter Decay";
 	lv2:minimum 0; 
 	lv2:maximum 1000.01;
-	lv2:default 0;
+	lv2:default 400;
   ],  
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -289,7 +289,7 @@
 	lv2:name "Filter Sustain";
 	lv2:minimum 0; 
 	lv2:maximum 1.01;
-	lv2:default 1;
+	lv2:default 0.7;
   ],  
   
   
@@ -300,7 +300,7 @@
 	lv2:name "Glide";
 	lv2:minimum 0; 
 	lv2:maximum 10.01;
-	lv2:default 0;
+	lv2:default 1;
   ],
       [
 	a lv2:ControlPort, lv2:InputPort;
@@ -323,7 +323,7 @@
 	lv2:name "Button Osc1";
 	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
-	lv2:default 0;
+	lv2:default 1;
 	lv2:minimum 0;
 	lv2:maximum 2;
 	lv2:scalePoint [ rdf:value 0; rdfs:label "Off" ];
@@ -337,7 +337,7 @@
 	lv2:name "Button Osc2";
 	#lv2:portProperty epp:hasStrictBounds;
 	lv2:portProperty lv2:integer , lv2:enumeration;
-	lv2:default 0;
+	lv2:default 1;
 	lv2:minimum 0;
 	lv2:maximum 2;
 	lv2:scalePoint [ rdf:value 0; rdfs:label "Off" ];
@@ -364,7 +364,7 @@
 	lv2:name "Resonance";
 	lv2:minimum 0; 
 	lv2:maximum 10.01;
-	lv2:default 0;
+	lv2:default 3;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -382,7 +382,7 @@
 	lv2:name "Osc tuning 1";
 	lv2:minimum -12.0; 
 	lv2:maximum 12.01;
-	lv2:default 0;
+	lv2:default -0.02;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -391,7 +391,7 @@
 	lv2:name "Osc tuning2";
 	lv2:minimum -12.0; 
 	lv2:maximum 12.01;
-	lv2:default 0;
+	lv2:default 0.02;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -409,5 +409,5 @@
 	lv2:name "Filter release";
 	lv2:minimum 0; 
 	lv2:maximum 1.01;
-	lv2:default 0;
+	lv2:default 0.5;
   ].
