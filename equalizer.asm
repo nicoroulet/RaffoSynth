@@ -55,6 +55,8 @@ section .text
 	;xmm12 = 0 | 0 |*(prev_vals+3) | *(prev_vals+2)
 	;xmm13 = 0 | 0 |*(prev_vals+5) | *(prev_vals+4)
 
+;  equalizer(p(m_output), prev_vals, sample_count, lpf_b0, - lpf_a2,
+	;- lpf_a1, peak_b2, peak_b1, -peak_a2, -peak_a1, peak_b0);
 
 ;------------------------------------------------------------------------------------------
 ;---------------------------------- VERSIONES UN ACCESO UN DATO  --------------------------
@@ -89,15 +91,15 @@ equalizer:
 	movdqu xmm1, xmm0		;en xmm0 tendré lo mismo que en el 1
 	mulss xmm1, [rel unDos]	;lo multiplico por dos, porque float psuma1 = psuma0 *2;
 
-	; pand xmm0, xmm10	; filtro todo lo que no sea el primer float - todo sacar, no hace falta
-	; pand xmm1, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm2, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm3, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm4, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm5, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm6, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm7, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm8, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm0, xmm10	; filtro todo lo que no sea el primer float - todo sacar, no hace falta
+	pand xmm1, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm2, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm3, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm4, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm5, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm6, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm7, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm8, xmm10	; filtro todo lo que no sea el primer float
 	;----------------.
 	;-----------------
 
@@ -164,7 +166,7 @@ equalizer:
 	;------- arranca el ciclo grande ----------------
 	xor rbx, rbx		; i empieza en 0
 	.cicloGrande:
-	cmp edx, ebx		;si i es sample_count, termino
+	cmp rbx, rdx		;si i es sample_count, termino
 	jae .finGrande
 
 	mov r14, rbx
@@ -188,6 +190,14 @@ equalizer:
 	por xmm5, xmm11		;xmm5 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
 
 	mulps xmm5, xmm0	;xmm5 = *(pv+3)*ps3	   |*(pv+2)*ps2	   |*(pv+1)*ps1	   |*(pv)*ps0
+
+	;---suma vertical
+	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
+	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
+	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
+	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
+	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
+	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
 
 	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
 	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
@@ -228,6 +238,14 @@ equalizer:
     por xmm5, xmm12			;xmm5 = *(prev_vals+5) |*(prev_vals+4) |*(prev_vals+3) | *(prev_vals2)
 
     mulps xmm5, xmm2		;xmm5 = *(pv+5)*ss3	   |*(pv+4)*ss2	   |*(pv+3)*ss1	   |*(pv+2)*ss0
+
+	;---suma vertical
+	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
+	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
+	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
+	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
+	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
+	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
 
 	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |ssuma3+ssuma2|ssuma1+ssuma0
 	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ss3+ss2+ss1+ss0
@@ -270,14 +288,6 @@ equalizer:
     por xmm13, xmm15		;xmm13 = 0 | output | *(prev_vals+5) | *(prev_vals+4)
     psrldq xmm13, 4			;xmm13 = 0 | 0 | output| *(prev_vals+5) 
 
-
-    movdqu xmm15, xmm4		;meto xmm4 en el dw mas alto de xmm15
-    pslldq xmm15, 12		;xmm15 = res | 0 | 0 | 0
-    orps xmm8, xmm15
-
-    psrldq xmm9, 4			;shifteo 1 dw a la derecha, para usar el siguiente dato. la segunda entrada pasa a ser la primera
-    movdqu xmm4, xmm9		;copio toda la entrada a xmm4
-	pand xmm4, xmm7		;limpio la parte superior. solo queda la primer entrada
 
 
 
@@ -333,15 +343,15 @@ equalizerb:
 	movdqu xmm1, xmm0		;en xmm0 tendré lo mismo que en el 1
 	mulss xmm1, [rel unDos]	;lo multiplico por dos, porque float psuma1 = psuma0 *2;
 
-	; pand xmm0, xmm10	; filtro todo lo que no sea el primer float - todo sacar, no hace falta
-	; pand xmm1, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm2, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm3, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm4, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm5, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm6, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm7, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm8, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm0, xmm10	; filtro todo lo que no sea el primer float - todo sacar, no hace falta
+	pand xmm1, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm2, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm3, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm4, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm5, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm6, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm7, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm8, xmm10	; filtro todo lo que no sea el primer float
 	;----------------.
 	;-----------------
 
@@ -409,7 +419,7 @@ equalizerb:
 	xor rbx, rbx		; i empieza en 0
 	.cicloGrande:
 	cmp edx, ebx		;si i es sample_count, termino
-	jae .finGrande
+	je .finGrande
 
 	mov r14, rbx
 	sal r14, 2		;multiplico por 4
