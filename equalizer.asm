@@ -58,6 +58,7 @@ section .text
 ;  equalizer(p(m_output), prev_vals, sample_count, lpf_b0, - lpf_a2,
 	;- lpf_a1, peak_b2, peak_b1, -peak_a2, -peak_a1, peak_b0);
 
+
 ;------------------------------------------------------------------------------------------
 ;---------------------------------- VERSIONES UN ACCESO UN DATO  --------------------------
 ;------------------------------------------------------------------------------------------
@@ -166,7 +167,7 @@ equalizer:
 	;------- arranca el ciclo grande ----------------
 	xor rbx, rbx		; i empieza en 0
 	.cicloGrande:
-	cmp rbx, rdx		;si i es sample_count, termino
+	cmp ebx, edx		;si i es sample_count, termino
 	jae .finGrande
 
 	mov r14, rbx
@@ -191,16 +192,8 @@ equalizer:
 
 	mulps xmm5, xmm0	;xmm5 = *(pv+3)*ps3	   |*(pv+2)*ps2	   |*(pv+1)*ps1	   |*(pv)*ps0
 
-	;---suma vertical
-	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
-	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
-	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
-	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
-	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
-	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
-
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
 
 	addss xmm4, xmm5		;xmm4 = xmm4 * lpf_b0 + lpf_b0 * *(prev_vals) + lpf_b1 * *(prev_vals+1) - lpf_a2 * *(prev_vals+2) - lpf_a1 * *(prev_vals+3)
 
@@ -239,16 +232,9 @@ equalizer:
 
     mulps xmm5, xmm2		;xmm5 = *(pv+5)*ss3	   |*(pv+4)*ss2	   |*(pv+3)*ss1	   |*(pv+2)*ss0
 
-	;---suma vertical
-	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
-	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
-	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
-	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
-	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
-	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
 
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |ssuma3+ssuma2|ssuma1+ssuma0
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ss3+ss2+ss1+ss0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      |ssuma3+ssuma2|ssuma1+ssuma0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ss3+ss2+ss1+ss0
 
 	addss xmm4, xmm5		;xmm4 = xmm4 * peak_b0 + peak_b2 * *(prev_vals+2) + peak_b1 * *(prev_vals+3) - peak_a2 * *(prev_vals+4) - peak_a1 * *(prev_vals+5);
 
@@ -609,17 +595,19 @@ equalizerc:
 	movdqu xmm1, xmm0		;en xmm0 tendré lo mismo que en el 1
 	mulss xmm1, [rel unDos]	;lo multiplico por dos, porque float psuma1 = psuma0 *2;
 
-	; pand xmm0, xmm10	; filtro todo lo que no sea el primer float - todo sacar, no hace falta
-	; pand xmm1, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm2, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm3, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm4, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm5, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm6, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm7, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm8, xmm10	; filtro todo lo que no sea el primer float
+
+	pand xmm0, xmm10	; filtro todo lo que no sea el primer float - todo sacar, no hace falta
+	pand xmm1, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm2, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm3, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm4, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm5, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm6, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm7, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm8, xmm10	; filtro todo lo que no sea el primer float
 	;----------------.
 	;-----------------
+
 
 
 	movdqu xmm9, xmm0		;xmm9 = factorsuma1
@@ -684,7 +672,7 @@ equalizerc:
 	;------- arranca el ciclo grande ----------------
 	xor rbx, rbx		; i empieza en 0
 	.cicloGrande:
-	cmp edx, ebx		;si i es sample_count, termino
+	cmp ebx, edx		;si i es sample_count, termino
 	jae .finGrande
 
 	mov r14, rbx
@@ -702,7 +690,7 @@ equalizerc:
 	;------ arranca el ciclo chico -------------
 	xor r11d, r11d		; r11d empieza en 0
 	.cicloChico:
-	cmp r11d, 3			;si r11d es 3, termino
+	cmp r11d, 4			;si r11d es 3, termino
 	jae .finChico
 
 
@@ -725,16 +713,8 @@ equalizerc:
 
 	mulps xmm5, xmm0	;xmm5 = *(pv+3)*ps3	   |*(pv+2)*ps2	   |*(pv+1)*ps1	   |*(pv)*ps0
 
-	;---suma vertical
-	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
-	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
-	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
-	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
-	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
-	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
-
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
 
 	addss xmm4, xmm5		;xmm4 = xmm4 * lpf_b0 + lpf_b0 * *(prev_vals) + lpf_b1 * *(prev_vals+1) - lpf_a2 * *(prev_vals+2) - lpf_a1 * *(prev_vals+3)
 
@@ -773,17 +753,8 @@ equalizerc:
 
     mulps xmm5, xmm2		;xmm5 = *(pv+5)*ss3	   |*(pv+4)*ss2	   |*(pv+3)*ss1	   |*(pv+2)*ss0
 
-    ; ---suma vertical
-	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
-	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
-	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
-	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
-	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
-	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
-
-
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |ssuma3+ssuma2|ssuma1+ssuma0
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ss3+ss2+ss1+ss0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      |ssuma3+ssuma2|ssuma1+ssuma0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ss3+ss2+ss1+ss0
 
 	addss xmm4, xmm5		;xmm4 = xmm4 * peak_b0 + peak_b2 * *(prev_vals+2) + peak_b1 * *(prev_vals+3) - peak_a2 * *(prev_vals+4) - peak_a1 * *(prev_vals+5);
 
@@ -890,17 +861,19 @@ equalizerd:
 	movdqu xmm1, xmm0		;en xmm0 tendré lo mismo que en el 1
 	mulss xmm1, [rel unDos]	;lo multiplico por dos, porque float psuma1 = psuma0 *2;
 
-	; pand xmm0, xmm10	; filtro todo lo que no sea el primer float - todo sacar, no hace falta
-	; pand xmm1, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm2, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm3, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm4, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm5, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm6, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm7, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm8, xmm10	; filtro todo lo que no sea el primer float
+
+	pand xmm0, xmm10	; filtro todo lo que no sea el primer float - todo sacar, no hace falta
+	pand xmm1, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm2, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm3, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm4, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm5, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm6, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm7, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm8, xmm10	; filtro todo lo que no sea el primer float
 	;----------------.
 	;-----------------
+
 
 
 	movdqu xmm9, xmm0		;xmm9 = factorsuma1
@@ -950,7 +923,7 @@ equalizerd:
 	;------- fin constantes ------------------ 
 
 	;------- levanto prev_vals
-	movdqu xmm11, [rdi] ; xmm11 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
+	movdqu xmm11, [rsi] ; xmm11 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
 	movdqu xmm12, xmm11	; xmm12 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
 	psrldq xmm12, 8		; xmm12 = 0 | 0 | *(prev_vals+3) | *(prev_vals+2)
 
@@ -958,14 +931,14 @@ equalizerd:
 
 
 
-	movq xmm13, [rdi + 16]	;xmm13 = basura | basura | *(prev_vals+5) |*(prev_vals+4)
+	movq xmm13, [rsi + 16]	;xmm13 = basura | basura | *(prev_vals+5) |*(prev_vals+4)
 	pand xmm13, xmm10	; xmm13 = 0 | 0 | *(prev_vals+5) |*(prev_vals+4)
 
 
 	;------- arranca el ciclo grande ----------------
 	xor rbx, rbx		; i empieza en 0
 	.cicloGrande:
-	cmp edx, ebx		;si i es sample_count, termino
+	cmp ebx, edx		;si i es sample_count, termino
 	jae .finGrande
 
 	mov r14, rbx
@@ -983,7 +956,7 @@ equalizerd:
 	;------ arranca el ciclo chico -------------
 	xor r11d, r11d		; r11d empieza en 0
 	.cicloChico:
-	cmp r11d, 3			;si r11d es 3, termino
+	cmp r11d, 4			;si r11d es 3, termino
 	jae .finChico
 
 
@@ -1006,15 +979,13 @@ equalizerd:
 
 	mulps xmm5, xmm0	;xmm5 = *(pv+3)*ps3	   |*(pv+2)*ps2	   |*(pv+1)*ps1	   |*(pv)*ps0
 
-
-    ; ---suma vertical
+	;---suma vertical
 	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
 	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
 	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
 	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
 	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
 	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
-
 
 	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
 	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
@@ -1148,7 +1119,8 @@ ret
 ;---------------------------- VERSIONES UN ACCESO CUATRO DATOS, LOOP UNROLLED -------------
 ;------------------------------------------------------------------------------------------
 
-;versión con sumas horizontales
+
+;versión con sumas horizontales 
 equalizere:
 	push rbp
 	mov rbp, rsp
@@ -1177,17 +1149,19 @@ equalizere:
 	movdqu xmm1, xmm0		;en xmm0 tendré lo mismo que en el 1
 	mulss xmm1, [rel unDos]	;lo multiplico por dos, porque float psuma1 = psuma0 *2;
 
-	; pand xmm0, xmm10	; filtro todo lo que no sea el primer float - todo sacar, no hace falta
-	; pand xmm1, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm2, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm3, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm4, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm5, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm6, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm7, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm8, xmm10	; filtro todo lo que no sea el primer float
+
+	pand xmm0, xmm10	; filtro todo lo que no sea el primer float - todo sacar, no hace falta
+	pand xmm1, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm2, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm3, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm4, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm5, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm6, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm7, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm8, xmm10	; filtro todo lo que no sea el primer float
 	;----------------.
 	;-----------------
+
 
 
 	movdqu xmm9, xmm0		;xmm9 = factorsuma1
@@ -1252,7 +1226,7 @@ equalizere:
 	;------- arranca el ciclo grande ----------------
 	xor rbx, rbx		; i empieza en 0
 	.cicloGrande:
-	cmp edx, ebx		;si i es sample_count, termino
+	cmp ebx, edx		;si i es sample_count, termino
 	jae .finGrande
 
 	mov r14, rbx
@@ -1267,17 +1241,10 @@ equalizere:
 
 	pxor xmm8, xmm8			;xmm8 va a tener toda la salida
 
-	;------ arrancan los 4 ciclos chicos -------------
-	
-
-	;--------------------------------------------- 
-	;---------- inicio ciclo 0 -------------------
-	;--------------------------------------------- 
-
-	xor r11d, r11d		; r11d empieza en 0
-
+	;------ arranca el ciclo chico 0 -------------
 
 	psrldq xmm8, 4			;shifteo 4 bytes, para correr los resultados anteriores hacia la derecha (los primeros van en los bits mas bajos)
+
 
 	;---------- low-pass filter-------------------
 
@@ -1295,16 +1262,8 @@ equalizere:
 
 	mulps xmm5, xmm0	;xmm5 = *(pv+3)*ps3	   |*(pv+2)*ps2	   |*(pv+1)*ps1	   |*(pv)*ps0
 
-	;---suma vertical
-	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
-	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
-	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
-	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
-	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
-	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
-
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
 
 	addss xmm4, xmm5		;xmm4 = xmm4 * lpf_b0 + lpf_b0 * *(prev_vals) + lpf_b1 * *(prev_vals+1) - lpf_a2 * *(prev_vals+2) - lpf_a1 * *(prev_vals+3)
 
@@ -1343,17 +1302,8 @@ equalizere:
 
     mulps xmm5, xmm2		;xmm5 = *(pv+5)*ss3	   |*(pv+4)*ss2	   |*(pv+3)*ss1	   |*(pv+2)*ss0
 
-    ; ---suma vertical
-	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
-	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
-	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
-	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
-	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
-	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
-
-
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |ssuma3+ssuma2|ssuma1+ssuma0
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ss3+ss2+ss1+ss0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      |ssuma3+ssuma2|ssuma1+ssuma0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ss3+ss2+ss1+ss0
 
 	addss xmm4, xmm5		;xmm4 = xmm4 * peak_b0 + peak_b2 * *(prev_vals+2) + peak_b1 * *(prev_vals+3) - peak_a2 * *(prev_vals+4) - peak_a1 * *(prev_vals+5);
 
@@ -1404,19 +1354,12 @@ equalizere:
 
 
     inc r11d
-    
-    ;--------------------------------------------- 
-	;---------- fin ciclo 0 ----------------------
-	;--------------------------------------------- 
+    ;-------fin ciclo chico 0 -------------
 
-	;--------------------------------------------- 
-	;---------- inicio ciclo 1 -------------------
-	;--------------------------------------------- 
-
-	xor r11d, r11d		; r11d empieza en 0
-
+    ;------ arranca el ciclo chico 1 -------------
 
 	psrldq xmm8, 4			;shifteo 4 bytes, para correr los resultados anteriores hacia la derecha (los primeros van en los bits mas bajos)
+
 
 	;---------- low-pass filter-------------------
 
@@ -1434,16 +1377,8 @@ equalizere:
 
 	mulps xmm5, xmm0	;xmm5 = *(pv+3)*ps3	   |*(pv+2)*ps2	   |*(pv+1)*ps1	   |*(pv)*ps0
 
-	;---suma vertical
-	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
-	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
-	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
-	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
-	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
-	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
-
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
 
 	addss xmm4, xmm5		;xmm4 = xmm4 * lpf_b0 + lpf_b0 * *(prev_vals) + lpf_b1 * *(prev_vals+1) - lpf_a2 * *(prev_vals+2) - lpf_a1 * *(prev_vals+3)
 
@@ -1482,17 +1417,8 @@ equalizere:
 
     mulps xmm5, xmm2		;xmm5 = *(pv+5)*ss3	   |*(pv+4)*ss2	   |*(pv+3)*ss1	   |*(pv+2)*ss0
 
-    ; ---suma vertical
-	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
-	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
-	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
-	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
-	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
-	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
-
-
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |ssuma3+ssuma2|ssuma1+ssuma0
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ss3+ss2+ss1+ss0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      |ssuma3+ssuma2|ssuma1+ssuma0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ss3+ss2+ss1+ss0
 
 	addss xmm4, xmm5		;xmm4 = xmm4 * peak_b0 + peak_b2 * *(prev_vals+2) + peak_b1 * *(prev_vals+3) - peak_a2 * *(prev_vals+4) - peak_a1 * *(prev_vals+5);
 
@@ -1543,19 +1469,12 @@ equalizere:
 
 
     inc r11d
-    
-    ;--------------------------------------------- 
-	;---------- fin ciclo 1 ----------------------
-	;--------------------------------------------- 
+    ;-------fin ciclo chico 1 -------------
 
-	;--------------------------------------------- 
-	;---------- inicio ciclo 2 -------------------
-	;--------------------------------------------- 
-
-	xor r11d, r11d		; r11d empieza en 0
-
+    ;------ arranca el ciclo chico 2 -------------
 
 	psrldq xmm8, 4			;shifteo 4 bytes, para correr los resultados anteriores hacia la derecha (los primeros van en los bits mas bajos)
+
 
 	;---------- low-pass filter-------------------
 
@@ -1573,16 +1492,8 @@ equalizere:
 
 	mulps xmm5, xmm0	;xmm5 = *(pv+3)*ps3	   |*(pv+2)*ps2	   |*(pv+1)*ps1	   |*(pv)*ps0
 
-	;---suma vertical
-	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
-	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
-	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
-	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
-	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
-	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
-
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
 
 	addss xmm4, xmm5		;xmm4 = xmm4 * lpf_b0 + lpf_b0 * *(prev_vals) + lpf_b1 * *(prev_vals+1) - lpf_a2 * *(prev_vals+2) - lpf_a1 * *(prev_vals+3)
 
@@ -1621,17 +1532,8 @@ equalizere:
 
     mulps xmm5, xmm2		;xmm5 = *(pv+5)*ss3	   |*(pv+4)*ss2	   |*(pv+3)*ss1	   |*(pv+2)*ss0
 
-    ; ---suma vertical
-	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
-	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
-	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
-	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
-	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
-	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
-
-
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |ssuma3+ssuma2|ssuma1+ssuma0
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ss3+ss2+ss1+ss0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      |ssuma3+ssuma2|ssuma1+ssuma0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ss3+ss2+ss1+ss0
 
 	addss xmm4, xmm5		;xmm4 = xmm4 * peak_b0 + peak_b2 * *(prev_vals+2) + peak_b1 * *(prev_vals+3) - peak_a2 * *(prev_vals+4) - peak_a1 * *(prev_vals+5);
 
@@ -1682,20 +1584,12 @@ equalizere:
 
 
     inc r11d
-    
-    ;--------------------------------------------- 
-	;---------- fin ciclo 2 ----------------------
-	;---------------------------------------------
+    ;-------fin ciclo chico 2 -------------
 
-
-	;--------------------------------------------- 
-	;---------- inicio ciclo 3 -------------------
-	;--------------------------------------------- 
-
-	xor r11d, r11d		; r11d empieza en 0
-
+    ;------ arranca el ciclo chico 3 -------------
 
 	psrldq xmm8, 4			;shifteo 4 bytes, para correr los resultados anteriores hacia la derecha (los primeros van en los bits mas bajos)
+
 
 	;---------- low-pass filter-------------------
 
@@ -1713,16 +1607,8 @@ equalizere:
 
 	mulps xmm5, xmm0	;xmm5 = *(pv+3)*ps3	   |*(pv+2)*ps2	   |*(pv+1)*ps1	   |*(pv)*ps0
 
-	;---suma vertical
-	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
-	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
-	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
-	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
-	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
-	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
-
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
 
 	addss xmm4, xmm5		;xmm4 = xmm4 * lpf_b0 + lpf_b0 * *(prev_vals) + lpf_b1 * *(prev_vals+1) - lpf_a2 * *(prev_vals+2) - lpf_a1 * *(prev_vals+3)
 
@@ -1761,17 +1647,8 @@ equalizere:
 
     mulps xmm5, xmm2		;xmm5 = *(pv+5)*ss3	   |*(pv+4)*ss2	   |*(pv+3)*ss1	   |*(pv+2)*ss0
 
-    ; ---suma vertical
-	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
-	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
-	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
-	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
-	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
-	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
-
-
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |ssuma3+ssuma2|ssuma1+ssuma0
-	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ss3+ss2+ss1+ss0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      |ssuma3+ssuma2|ssuma1+ssuma0
+	haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ss3+ss2+ss1+ss0
 
 	addss xmm4, xmm5		;xmm4 = xmm4 * peak_b0 + peak_b2 * *(prev_vals+2) + peak_b1 * *(prev_vals+3) - peak_a2 * *(prev_vals+4) - peak_a1 * *(prev_vals+5);
 
@@ -1822,10 +1699,7 @@ equalizere:
 
 
     inc r11d
-    
-    ;--------------------------------------------- 
-	;---------- fin ciclo 3 ----------------------
-	;--------------------------------------------- 
+    ;-------fin ciclo chico 3 -------------
 
     ;----- copio xmm8 a la direccion del buffer
     movdqu [r14], xmm8
@@ -1849,6 +1723,7 @@ equalizere:
 	pop rbx
 	pop rbp
 ret
+
 
 ;versión con sumas verticales
 equalizerf:
@@ -1879,17 +1754,19 @@ equalizerf:
 	movdqu xmm1, xmm0		;en xmm0 tendré lo mismo que en el 1
 	mulss xmm1, [rel unDos]	;lo multiplico por dos, porque float psuma1 = psuma0 *2;
 
-	; pand xmm0, xmm10	; filtro todo lo que no sea el primer float - todo sacar, no hace falta
-	; pand xmm1, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm2, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm3, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm4, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm5, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm6, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm7, xmm10	; filtro todo lo que no sea el primer float
-	; pand xmm8, xmm10	; filtro todo lo que no sea el primer float
+
+	pand xmm0, xmm10	; filtro todo lo que no sea el primer float - todo sacar, no hace falta
+	pand xmm1, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm2, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm3, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm4, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm5, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm6, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm7, xmm10	; filtro todo lo que no sea el primer float
+	pand xmm8, xmm10	; filtro todo lo que no sea el primer float
 	;----------------.
 	;-----------------
+
 
 
 	movdqu xmm9, xmm0		;xmm9 = factorsuma1
@@ -1939,7 +1816,7 @@ equalizerf:
 	;------- fin constantes ------------------ 
 
 	;------- levanto prev_vals
-	movdqu xmm11, [rdi] ; xmm11 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
+	movdqu xmm11, [rsi] ; xmm11 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
 	movdqu xmm12, xmm11	; xmm12 = *(prev_vals+3) |*(prev_vals+2) |*(prev_vals+1) | *(prev_vals)
 	psrldq xmm12, 8		; xmm12 = 0 | 0 | *(prev_vals+3) | *(prev_vals+2)
 
@@ -1947,14 +1824,14 @@ equalizerf:
 
 
 
-	movq xmm13, [rdi + 16]	;xmm13 = basura | basura | *(prev_vals+5) |*(prev_vals+4)
+	movq xmm13, [rsi + 16]	;xmm13 = basura | basura | *(prev_vals+5) |*(prev_vals+4)
 	pand xmm13, xmm10	; xmm13 = 0 | 0 | *(prev_vals+5) |*(prev_vals+4)
 
 
 	;------- arranca el ciclo grande ----------------
 	xor rbx, rbx		; i empieza en 0
 	.cicloGrande:
-	cmp edx, ebx		;si i es sample_count, termino
+	cmp ebx, edx		;si i es sample_count, termino
 	jae .finGrande
 
 	mov r14, rbx
@@ -1969,12 +1846,7 @@ equalizerf:
 
 	pxor xmm8, xmm8			;xmm8 va a tener toda la salida
 
-	;------ arrancan los ciclos chicos -------------
-
-	;---------------------------------------------
-	;---------- inicio ciclo 0 -------------------
-	;---------------------------------------------
-
+	;------ arranca el ciclo chico 0 -------------
 
 	psrldq xmm8, 4			;shifteo 4 bytes, para correr los resultados anteriores hacia la derecha (los primeros van en los bits mas bajos)
 
@@ -1995,15 +1867,13 @@ equalizerf:
 
 	mulps xmm5, xmm0	;xmm5 = *(pv+3)*ps3	   |*(pv+2)*ps2	   |*(pv+1)*ps1	   |*(pv)*ps0
 
-
-    ; ---suma vertical
+	;---suma vertical
 	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
 	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
 	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
 	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
 	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
 	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
-
 
 	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
 	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
@@ -2105,15 +1975,10 @@ equalizerf:
 	pand xmm4, xmm7		;limpio la parte superior. solo queda la primer entrada
 
 
-    ;---------------------------------------------
-	;---------- fin ciclo 0 ----------------------
-	;---------------------------------------------
+    inc r11d
+    ;-------fin ciclo chico 0 ----------------
 
-
-	;---------------------------------------------
-	;---------- inicio ciclo 1 -------------------
-	;---------------------------------------------
-
+	;------ arranca el ciclo chico 1 -------------
 
 	psrldq xmm8, 4			;shifteo 4 bytes, para correr los resultados anteriores hacia la derecha (los primeros van en los bits mas bajos)
 
@@ -2134,15 +1999,13 @@ equalizerf:
 
 	mulps xmm5, xmm0	;xmm5 = *(pv+3)*ps3	   |*(pv+2)*ps2	   |*(pv+1)*ps1	   |*(pv)*ps0
 
-
-    ; ---suma vertical
+	;---suma vertical
 	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
 	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
 	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
 	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
 	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
 	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
-
 
 	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
 	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
@@ -2244,14 +2107,10 @@ equalizerf:
 	pand xmm4, xmm7		;limpio la parte superior. solo queda la primer entrada
 
 
-    ;---------------------------------------------
-	;---------- fin ciclo 1 ----------------------
-	;---------------------------------------------
+    inc r11d
+    ;-------fin ciclo chico 1 ----------------
 
-	;---------------------------------------------
-	;---------- inicio ciclo 2 -------------------
-	;---------------------------------------------
-
+	;------ arranca el ciclo chico 2 -------------
 
 	psrldq xmm8, 4			;shifteo 4 bytes, para correr los resultados anteriores hacia la derecha (los primeros van en los bits mas bajos)
 
@@ -2272,15 +2131,13 @@ equalizerf:
 
 	mulps xmm5, xmm0	;xmm5 = *(pv+3)*ps3	   |*(pv+2)*ps2	   |*(pv+1)*ps1	   |*(pv)*ps0
 
-
-    ; ---suma vertical
+	;---suma vertical
 	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
 	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
 	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
 	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
 	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
 	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
-
 
 	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
 	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
@@ -2382,15 +2239,10 @@ equalizerf:
 	pand xmm4, xmm7		;limpio la parte superior. solo queda la primer entrada
 
 
-    ;---------------------------------------------
-	;---------- fin ciclo 2 ----------------------
-	;---------------------------------------------
+    inc r11d
+    ;-------fin ciclo chico 2 ----------------
 
-
-	;---------------------------------------------
-	;---------- inicio ciclo 3 -------------------
-	;---------------------------------------------
-
+	;------ arranca el ciclo chico 3 -------------
 
 	psrldq xmm8, 4			;shifteo 4 bytes, para correr los resultados anteriores hacia la derecha (los primeros van en los bits mas bajos)
 
@@ -2411,15 +2263,13 @@ equalizerf:
 
 	mulps xmm5, xmm0	;xmm5 = *(pv+3)*ps3	   |*(pv+2)*ps2	   |*(pv+1)*ps1	   |*(pv)*ps0
 
-
-    ; ---suma vertical
+	;---suma vertical
 	movdqu xmm15, xmm5	;xmm15 = a | b | c | d
 	psrldq xmm15, 8		;xmm15 = 0 | 0 | a | b
 	addps xmm5, xmm15	;xmm5  = a | b | a+c | b+d
 	movdqu xmm15, xmm5	;xmm15 = a | b | a+c | b+d
 	psrldq xmm15, 4		;xmm15 = 0 | a | b   | a+c
 	addps xmm5, xmm15	;xmm5 = basura | basura | basura |a+c+b+d
-
 
 	; haddps xmm5, xmm5	;xmm5 = basura      | basura      |psuma3+psuma2|psuma1+psuma0
 	; haddps xmm5, xmm5	;xmm5 = basura      | basura      | basura		|ps3+ps2+ps1+ps0
@@ -2521,9 +2371,8 @@ equalizerf:
 	pand xmm4, xmm7		;limpio la parte superior. solo queda la primer entrada
 
 
-    ;---------------------------------------------
-	;---------- fin ciclo 3 ----------------------
-	;---------------------------------------------
+    inc r11d
+    ;-------fin ciclo chico 3 ----------------
 
     ;----- copio xmm8 a la direccion del buffer
     movdqu [r14], xmm8
@@ -2547,6 +2396,7 @@ equalizerf:
 	pop rbx
 	pop rbp
 ret
+
 
 
 ;------------------------------------------------------------------------------------------
