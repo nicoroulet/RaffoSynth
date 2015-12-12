@@ -221,7 +221,7 @@
 	lv2:index 15;
 	lv2:symbol "attack";
 	lv2:name "Attack";
-	lv2:minimum 100; 
+	lv2:minimum 10; 
 	lv2:maximum 1000.01;
 	lv2:default 0;
   ],

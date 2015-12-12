@@ -46,14 +46,18 @@ raffo_gui.so: raffo_gui.cpp raffo.peg
 raffo.peg: raffo.ttl
 	lv2peg raffo.ttl raffo.peg
 
-	
 install: $(BUNDLE)
 	mkdir -p $(INSTALL_DIR)
 	rm -f $(INSTALL_DIR)/$(BUNDLE)/*.so $(INSTALL_DIR)/$(BUNDLE)/*.ttl
 	mkdir -p -m=777 $(INSTALL_DIR)/$(BUNDLE)/presets
 	cp -R $(BUNDLE) $(INSTALL_DIR)
 
+
 clean:
 	rm -rf $(BUNDLE) raffo.so raffo_gui.so raffo.peg raffo.o oscillators.o equalizer.o
+
+uninstall: 
+	rm -rf $(INSTALL_DIR)/$(BUNDLE)
+
 
 .PHONY: install clean oscillators_c oscillators_asm equalizer_c equalizer_asm

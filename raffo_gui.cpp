@@ -140,31 +140,6 @@ RaffoSynthGUI::RaffoSynthGUI(const std::string& URI) {
 	Frame* f_vol = manage(new Frame("Volume"));
 	f_vol->add(*volume);
 	
-	/*
-	Gdk::Color wood;
-	wood.set_rgb(2000, 1000, 500);
-	
-	Gdk::Color black;
-	black.set_rgb(60000, 60000, 60000);
-	
-	Gdk::Color text;
-	text.set_red(60000);
-	text.set_green(60000);
-	text.set_blue(60000);
-
-	f_glide->modify_bg(STATE_NORMAL, black);
-	f_osc->modify_bg(STATE_NORMAL, black);
-	f_mod->modify_bg(STATE_NORMAL, black);
-	f_vol->modify_bg(STATE_NORMAL, black);
-	*/
-
-	/*
-	Image* bg_img = new Image("Wood-Texture.jpg");
-	Glib::RefPtr<Gdk::Pixbuf> bg_pixbuf;
-	bg_pixbuf = Gdk::Pixbuf::create_from_file("Wood-Texture.jpg");
-	interfaz->attach(manage(bg_pixbuf));
-	*/
-	
 	Button* save = manage(new Button("Save"));
 	Button* load = manage(new Button("Load"));
 	
@@ -185,12 +160,6 @@ RaffoSynthGUI::RaffoSynthGUI(const std::string& URI) {
 	interfaz->attach(*f_vol, 3, 4, 1, 2);
 	interfaz->attach(*presets, 2, 3, 0, 1);
 	
-	/*
-	EventBox* fondo = new EventBox();
-	fondo->modify_bg(STATE_NORMAL, wood);
-	fondo->add_pixlabel("Wood-Texture.jpg", "bg_image", 0);
-	add(*fondo);
-	*/
 	add(*interfaz);
 }
 	
@@ -389,50 +358,33 @@ void RaffoSynthGUI::load_preset(){
 		write_control(m_wave0 + i, aux);
 		f >> aux;
 		write_control(m_vol0 + i, aux);
-		// f << oscButton[i]->get_value() << endl;
-		// f << range[i]->get_value() << endl;
-		// f << oscTuning[i]->get_value() << endl;
-		// f << wave[i]->get_value() << endl;
-		// f << vol[i]->get_value() << endl;
 	}
 	f >> aux;
 	write_control(m_filter_cutoff, aux);
-	// f << filter_cutoff->get_value() << endl;
 	f >> aux;
 	write_control(m_filter_attack, aux);
-	// f << filter_attack->get_value() << endl;
 	f >> aux;
 	write_control(m_filter_decay, aux);
-	// f << filter_decay->get_value() << endl;
 	f >> aux;
 	write_control(m_filter_sustain, aux);
-	// f << filter_sustain->get_value() << endl;
 	f >> aux;
 	write_control(m_filter_release, aux);
-	// f << filter_release->get_value() << endl;
 	f >> aux;
 	write_control(m_filter_resonance, aux);
-	// f << filter_resonance->get_value() << endl;
 	
 	f >> aux;
 	write_control(m_attack, aux);
-	// f << attack->get_value() << endl;
 	f >> aux;
 	write_control(m_decay, aux);
-	// f << decay->get_value() << endl;
 	f >> aux;
 	write_control(m_sustain, aux);
-	// f << sustain->get_value() << endl;
 	f >> aux;
 	write_control(m_release, aux);
-	// f << release->get_value() << endl;
 	
 	f >> aux;
 	write_control(m_glide, aux);
-	// f << glide->get_value() << endl;
 	f >> aux;
 	write_control(m_volume, aux);
-	// f << volume->get_value() << endl;
 	
 	f.close();
 	

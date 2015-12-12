@@ -46,7 +46,6 @@ protected:
   ofstream output;
 
   void equ_wrapper(int sample_count);
-  void ir(int sample_count);
 
 public:
   typedef LV2::Plugin<RaffoSynth, LV2::URIMap<true> > Parent;

@@ -60,8 +60,6 @@ extern "C" void equalizer(float* buffer, float* prev, uint32_t sample_count, flo
 
 extern "C" void limpiarBuffer(uint32_t from, uint32_t to, float* buffer);
 
-extern "C" void nada();
-
 RaffoSynth::RaffoSynth(double rate):
   Parent(m_n_ports),
   sample_rate(rate),
@@ -127,46 +125,24 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
           //ASM/C
           ondaTriangular(from, to, counter, buffer, subperiod, vol, env);
           counter+= (to-from);
-
-          //C original
-          // for (uint32_t i = from; i < to; ++i, counter++) {
-            // buffer[i] += (fabs(fmod((counter + subperiod/4.), subperiod) /
-            //                   subperiod - .5)-.25)) * env * 4. *vol;     
-          // }
-          // zapato: la onda triangular esta hecha para que empiece continua, pero cuando se corta popea
           break;
         }
         case (1): { //sierra
           //ASM/C
           ondaSierra(from, to, counter, buffer, subperiod, vol, env);
           counter+= (to - from);
-
-          //C original
-          // for (uint32_t i = from; i < to; i+=4, counter+=4) {
-          //   buffer[i] += vol * (2. * fmod(counter, subperiod) / subperiod - 1) * env;
-          // }
           break;
         }
         case (2): { //cuadrada
           //ASM/C
           ondaCuadrada(from, to, counter, buffer, subperiod, vol, env);
           counter+= (to-from);
-
-          //C original
-          // for (uint32_t i = from; i < to; ++i, counter++) {
-          //   buffer[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .5) < 0)-1) * env;
-          // }
           break;
         }
         case (3): { //pulso
           //ASM/C
           ondaPulso(from, to, counter, buffer, subperiod, vol, env);
           counter+= (to-from);
-
-          //C original
-          // for (uint32_t i = from; i < to; ++i, counter++) {
-          //   buffer[i] += vol * (2. * ((fmod(counter, subperiod) / subperiod - .2) < 0)-1) * env;
-          // }
           break;
         }
       }
@@ -181,12 +157,11 @@ void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
     switch (data[0]) {
       case (0x90): { // note on
         if (keys.empty()) {
-	        //envelope_count = 0;
 	        if (primer_nota) {
 		        glide_period = sample_rate * 4 / key2hz(data[1]); // la primera nota no tiene glide
 		        primer_nota = false;
 	        }
-	        last_val[0] = last_val[1] = last_val[2] = last_val[3] = 0.25;
+	        // last_val[0] = last_val[1] = last_val[2] = last_val[3] = 0.25;
         }
         keys.push_front(data[1]);
         period = sample_rate * 4 / key2hz(data[1]);
@@ -203,7 +178,6 @@ void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
         } else {
         	period = sample_rate * 4 / key2hz(keys.front());
         }
-        //if (!keys.empty()) period = sample_rate * 2 / key2hz(keys.front());
         break;
       }
       case (0xE0): { // pitch bend
@@ -300,62 +274,6 @@ void RaffoSynth::equ_wrapper(int sample_count){
   //si se hizo make asm, se llama a equalizer en oscillators.asm
   // equalizer(p(m_output), prev_vals, sample_count, lpf_b0, lpf_b1, - lpf_a2, - lpf_a1, peak_b2, peak_b1, -peak_a2, -peak_a1, peak_b0);
   equalizer(p(m_output), prev_vals, sample_count, lpf_b0, - lpf_a2, - lpf_a1, peak_b2, peak_b1, -peak_a2, -peak_a1, peak_b0);
-}
-  
-
-//version original del equ, en c (no la usamos en la ultima version)
-void RaffoSynth::ir(int sample_count) { 
-  //http://www.musicdsp.org/files/Audio-EQ-Cookbook.txt
-  
-  // variables precalculadas
- 
-  float env = envelope(filter_count, FILTER_ATTACK, FILTER_DECAY, FILTER_SUSTAIN);
-  
-  float w0 = 6.28318530717959 * (*p(m_filter_cutoff) * env + 100) / sample_rate;
-  float alpha = sin(w0)/4.; // 2 * Q,  Q va a ser constante, por ahora = 2
-  float cosw0 = cos(w0);
-
-  float lpf_a0 = 1 + alpha;
-  float lpf_a1 = - 2 * cosw0 / lpf_a0;
-  float lpf_a2 = (1 - alpha) / lpf_a0;
-  float lpf_b1 = (1 - cosw0) / lpf_a0;
-  float lpf_b0 = lpf_b1 / 2;
-
-  float gain_factor = pow(10., *p(m_filter_resonance)/20.);
-  float peak_w0 = 6.28318530717959 * (*p(m_filter_cutoff) * env + 100) * 0.9 / sample_rate;
-  float peak_alpha = sin(peak_w0)/4.; // 2 * Q,  Q va a ser constante, por ahora = 2
-  float cos_peak_w0 = cos(peak_w0);
-  float peak_a0 = 1 + peak_alpha / gain_factor;
-  float peak_a1 = -2 * cos_peak_w0 / peak_a0;
-  float peak_a2 = (1 - peak_alpha / gain_factor) / peak_a0;
-  float peak_b0 = (1 + peak_alpha * gain_factor) / peak_a0;
-  float peak_b1 = - 2 * cos_peak_w0 / peak_a0;
-  float peak_b2 = (1 - peak_alpha * gain_factor) / peak_a0;
-
-
-  // EQ
-  for (int i = 0; i < sample_count; i++) {
-    //low-pass filter     
-
-    float temp = p(m_output)[i];
-    p(m_output)[i] *= lpf_b0;
-    p(m_output)[i] += lpf_b1 * prev_vals[1] + lpf_b0 * prev_vals[0] 
-                    - lpf_a1 * prev_vals[3] - lpf_a2 * prev_vals[2];
-    prev_vals[0] = prev_vals[1];
-    prev_vals[1] = temp;
-    
-    // peaking EQ (resonance)
-    float temp2 = p(m_output)[i];
-
-    p(m_output)[i] *= peak_b0;
-    p(m_output)[i] += peak_b1 * prev_vals[3] + peak_b2 * prev_vals[2] 
-                    - peak_a1 * prev_vals[5] - peak_a2 * prev_vals[4];
-    prev_vals[2] = prev_vals[3];
-    prev_vals[3] = temp;
-    prev_vals[4] = prev_vals[5];
-    prev_vals[5] = p(m_output)[i];
-     
-  }
 }
 
 static int _ = RaffoSynth::register_class(m_uri);
