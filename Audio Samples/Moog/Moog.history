@@ -1,2 +1,188 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<UndoHistory/>
+<UndoHistory>
+  <UndoTransaction tv-sec="1450378182" tv-usec="199015" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="66" new="65" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378182" tv-usec="283059" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="65" new="64" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378182" tv-usec="401779" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="64" new="63" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378182" tv-usec="500940" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="63" new="62" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378182" tv-usec="671755" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="62" new="61" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378185" tv-usec="254173" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="61" new="60" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378185" tv-usec="323417" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="60" new="59" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378185" tv-usec="339346" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="59" new="58" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378185" tv-usec="361320" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="58" new="57" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378185" tv-usec="377692" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="57" new="56" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378185" tv-usec="401678" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="56" new="55" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378185" tv-usec="426129" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="55" new="54" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378185" tv-usec="706430" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="54" new="55" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378185" tv-usec="868194" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="55" new="56" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378185" tv-usec="899092" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="56" new="57" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378185" tv-usec="922932" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="57" new="58" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378199" tv-usec="151035" name="mover marca">
+    <MementoCommand obj-id="13" type-name="ARDOUR::Locations">
+      <Locations>
+        <Location id="92" name="Bucle" start="0" end="698690040" flags="IsAutoLoop,IsHidden" locked="no" position-lock-style="AudioTime"/>
+        <Location id="93" name="Pinchazo" start="0" end="1" flags="IsAutoPunch,IsHidden" locked="no" position-lock-style="AudioTime"/>
+        <Location id="232" name="sesión" start="0" end="698690040" flags="IsSessionRange" locked="no" position-lock-style="AudioTime"/>
+      </Locations>
+      <Locations>
+        <Location id="92" name="Bucle" start="0" end="23194274" flags="IsAutoLoop,IsHidden" locked="no" position-lock-style="AudioTime"/>
+        <Location id="93" name="Pinchazo" start="0" end="1" flags="IsAutoPunch,IsHidden" locked="no" position-lock-style="AudioTime"/>
+        <Location id="232" name="sesión" start="0" end="23194274" flags="IsSessionRange" locked="no" position-lock-style="AudioTime"/>
+      </Locations>
+    </MementoCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378213" tv-usec="129903" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="58" new="59" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378213" tv-usec="154057" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="59" new="60" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+  <UndoTransaction tv-sec="1450378213" tv-usec="225203" name="cambiar intensidades">
+    <NoteDiffCommand midi-source="504529">
+      <ChangedNotes>
+        <Change property="Velocity" old="60" new="61" id="826"/>
+      </ChangedNotes>
+      <AddedNotes/>
+      <RemovedNotes/>
+    </NoteDiffCommand>
+  </UndoTransaction>
+</UndoHistory>
