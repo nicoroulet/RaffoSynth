@@ -4,6 +4,9 @@ RaffoSynth
 
 This is a digital emulator of a minimoog synthesizer, built as an LV2 audio plugin for Linux.
 
+## Documentation:
+ * Documentation can be found in **RaffoSynth.pdf**. This includes development explanation and experimentation.
+
 ## Dependencies:
  * `lv2-c++-tools`
  * `lv2peg`
