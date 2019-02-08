@@ -54,6 +54,8 @@ protected:
 	Entry* filename;
 	
 	char* waveshapes[4] = {"Triangle", "Saw", "Square", "Pulse"};
+	void write_waveshape(int control, int shape);
+
 	//static char* format_value(GtkScale *scale, int value){
      //   return str("-->%d<--", value);}
 	
