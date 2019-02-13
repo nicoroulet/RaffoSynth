@@ -40,7 +40,7 @@ RaffoSynthGUI::RaffoSynthGUI(const std::string& URI) {
 		
 		range[i]->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_range0 + i), mem_fun(*range[i], &HScale::get_value)));
 	 	
-		wave[i]->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_wave0 + i), mem_fun(*wave[i], &HScale::get_value)));
+		wave[i]->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_waveshape), m_wave0 + i), mem_fun(*wave[i], &HScale::get_value)));
 		
 		vol[i]->signal_value_changed().connect(compose(bind<0>(mem_fun(*this, &RaffoSynthGUI::write_control), m_vol0 + i), mem_fun(*vol[i], &HScale::get_value)));
 		
@@ -388,6 +388,12 @@ void RaffoSynthGUI::load_preset(){
 	
 	f.close();
 	
+}
+
+void RaffoSynthGUI::write_waveshape(int control, int shape)
+{
+	wave_label[control - m_wave0]->set_text(waveshapes[shape]);
+	write_control(control, shape);
 }
 
 static int _ = RaffoSynthGUI::register_class("http://example.org/raffo/gui");
