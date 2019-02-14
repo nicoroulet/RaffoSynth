@@ -11,6 +11,8 @@
 
 #include "tiempo.h"
 
+//#define EXPERIENCIA
+
 using namespace std;
 
 class RaffoSynth : public LV2::Plugin<RaffoSynth, LV2::URIMap<true> > //LV2::Synth<RaffoVoice, RaffoSynth> 
@@ -38,12 +40,14 @@ protected:
   
   uint32_t midi_type;
   
+#ifdef EXPERIENCIA
   Tiempo t_run;
   Tiempo t_osc;
   Tiempo t_eq;
   int run_count;
   
   ofstream output;
+#endif
 
   void equ_wrapper(int sample_count);
 
@@ -51,6 +55,10 @@ public:
   typedef LV2::Plugin<RaffoSynth, LV2::URIMap<true> > Parent;
   
   RaffoSynth(double rate);
+
+  void activate();
+  void deactivate();
+
   void render(uint32_t from, uint32_t to);
   void handle_midi(uint32_t size, unsigned char* data);
   void run(uint32_t sample_count);

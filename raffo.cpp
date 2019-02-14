@@ -62,20 +62,39 @@ extern "C" void limpiarBuffer(uint32_t from, uint32_t to, float* buffer);
 
 RaffoSynth::RaffoSynth(double rate):
   Parent(m_n_ports),
-  sample_rate(rate),
-  period(500),
-  glide_period(500),
-  counter(0),
-  pitch(1),
-  primer_nota(true), 
-  output("data/oscasm_256.out")
+  sample_rate(rate)
+#ifdef EXPERIENCIA
+, output("data/oscasm_256.out")
+#endif
   {
     midi_type = Parent::uri_to_id(LV2_EVENT_URI, "http://lv2plug.in/ns/ext/midi#MidiEvent"); 
-    prev_vals[0] = prev_vals[1] = prev_vals[2] = prev_vals[3] = prev_vals[4] = prev_vals[5] = 0;
   }
 
+void RaffoSynth::activate()
+{
+  period = 500;
+  glide_period = 500;
+  pre_buf_end = 0;
+  primer_nota = true;
+  counter = 0;
+  envelope_count = 0;
+  filter_count = 0;
+  modwheel = 0;
+  pitch = 1;
+  glide = 0;
+  last_val[0] = last_val[1] = last_val[2] = last_val[3] = 0;
+  prev_vals[0] = prev_vals[1] = prev_vals[2] = prev_vals[3] = prev_vals[4] = prev_vals[5] = 0;
+}
+
+void RaffoSynth::deactivate()
+{
+}
+
 void RaffoSynth::render(uint32_t from, uint32_t to) {
+#ifdef EXPERIENCIA
   t_osc.start();
+#endif
+
   // buffer en 0
   limpiarBuffer(from, to, p(m_output));
   
@@ -149,9 +168,12 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
     last_val[osc] = fmod(counter, subperiod) / subperiod; //para ajustar el enganche de la onda entre corridas de la funcion
     } //Fin del if
   } //Fin del for
+
+#ifdef EXPERIENCIA
   t_osc.stop();
+#endif
 }
-  
+
 void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
   if (size == 3) {
     switch (data[0]) {
@@ -195,8 +217,10 @@ void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
 
 void RaffoSynth::run(uint32_t sample_count) {
 
+#ifdef EXPERIENCIA
   run_count++;
   t_run.start();
+#endif
 
   LV2_Event_Iterator iter;
   lv2_event_begin(&iter, reinterpret_cast<LV2_Event_Buffer*&>(Parent::m_ports[m_midi]));
@@ -226,16 +250,23 @@ void RaffoSynth::run(uint32_t sample_count) {
         static_cast<RaffoSynth*>(this)->handle_midi(ev->size, event_data);
     }
   }
-  
-  // EQ 
+
+  // EQ
+#ifdef EXPERIENCIA
   t_eq.start();
+#endif
+
   equ_wrapper(sample_count);
   // ir(sample_count);
+
+#ifdef EXPERIENCIA
   t_eq.stop();
 
   t_run.stop();
+
   if (run_count<5000)
-	  output << run_count << " " << t_run.time << " " << t_osc.time << " " << t_eq.time << endl;
+    output << run_count << " " << t_run.time << " " << t_osc.time << " " << t_eq.time << endl;
+#endif
 } /*run*/
 
 //equ_wrapper prepara las variables y las manda a la funcion en asm o en c (segun como se compilo)
