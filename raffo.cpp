@@ -167,6 +167,10 @@ void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
         period = sample_rate * 4 / key2hz(data[1]);
         break;
       }
+      case (0xB0): { // Control Change => All Notes Off (CC 123)
+        if (data[1]!=0x7B) break;
+        keys.clear();
+      }
       case (0x80): { // note off
         keys.remove(data[1]);
         if (keys.empty()) {
