@@ -154,7 +154,7 @@ void RaffoSynth::render(uint32_t from, uint32_t to) {
   
 void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
   if (size == 3) {
-    switch (data[0]) {
+    switch (data[0] & 0xf0) {
       case (0x90): { // note on
         if (keys.empty()) {
 	        if (primer_nota) {
