@@ -171,6 +171,7 @@ void RaffoSynth::handle_midi(uint32_t size, unsigned char* data) {
         if (data[1]!=0x7B) break;
         keys.clear();
       }
+      // No break because we want the note off behaviour ;-)
       case (0x80): { // note off
         keys.remove(data[1]);
         if (keys.empty()) {
