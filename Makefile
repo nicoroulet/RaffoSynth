@@ -1,11 +1,11 @@
 BUNDLE = raffo.lv2
 INSTALL_DIR = /usr/local/lib/lv2
-FLAGS = -O3 -std=c++11 -m64
+FLAGS = -O3 -std=c++11
 
 ASM = nasm
 DBG = gdb
 #CFLAGS64 = -ggdb -Wall -std=c99 -m64 -O0
-CFLAGS = -std=c99 -m64 -O3
+CFLAGS = -std=c99 -O3
 ASMFLAGS64 = -felf64 -F dwarf
 
 #RAFFO_OBJ := if COMPILE_ASM then raffo_asm.o else raffo_c.o
