@@ -1,9 +1,12 @@
 #include <math.h>
 #include <lv2plugin.hpp>
-#include <lv2_event_helpers.h>
-#include <lv2_uri_map.h>
 #include <lv2types.hpp>
 #include <stdlib.h>
+
+#include "lv2/lv2plug.in/ns/ext/atom/atom.h"
+#include "lv2/lv2plug.in/ns/ext/atom/util.h"
+#include "lv2/lv2plug.in/ns/ext/midi/midi.h"
+#include "lv2/lv2plug.in/ns/ext/urid/urid.h"
 
 #include <list>
 #include <iostream>
@@ -15,7 +18,7 @@
 
 using namespace std;
 
-class RaffoSynth : public LV2::Plugin<RaffoSynth, LV2::URIMap<true> > //LV2::Synth<RaffoVoice, RaffoSynth> 
+class RaffoSynth : public LV2::Plugin<RaffoSynth> //LV2::Synth<RaffoVoice, RaffoSynth> 
 {
   
 protected:
@@ -52,7 +55,7 @@ protected:
   void equ_wrapper(int sample_count);
 
 public:
-  typedef LV2::Plugin<RaffoSynth, LV2::URIMap<true> > Parent;
+  typedef LV2::Plugin<RaffoSynth> Parent;
   
   RaffoSynth(double rate);
 
