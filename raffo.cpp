@@ -67,7 +67,6 @@ RaffoSynth::RaffoSynth(double rate):
 , output("data/oscasm_256.out")
 #endif
   {
-    midi_type = Parent::uri_to_id(LV2_EVENT_URI, "http://lv2plug.in/ns/ext/midi#MidiEvent"); 
   }
 
 void RaffoSynth::activate()
@@ -227,19 +226,21 @@ void RaffoSynth::run(uint32_t sample_count) {
   t_run.start();
 #endif
 
-  LV2_Event_Iterator iter;
-  lv2_event_begin(&iter, reinterpret_cast<LV2_Event_Buffer*&>(Parent::m_ports[m_midi]));
+  const LV2_Atom_Sequence* midi_p = reinterpret_cast<LV2_Atom_Sequence*&>(Parent::m_ports[m_midi]);
+  LV2_Atom_Event* iter = lv2_atom_sequence_begin(&midi_p->body);
 
-
-  uint8_t* event_data;
+  uint32_t type;
+  uint32_t size;
+  uint8_t *event_data;
   uint32_t samples_done = 0;
   while (samples_done < sample_count) {
     uint32_t to = sample_count;
-    LV2_Event* ev = 0;
-    if (lv2_event_is_valid(&iter)) {
-      ev = lv2_event_get(&iter, &event_data);
-      to = ev->frames;
-      lv2_event_increment(&iter);
+    if (!lv2_atom_sequence_is_end(&midi_p->body, midi_p->atom.size, iter)) {
+      event_data = (uint8_t*)(iter + 1);
+      to = iter->time.frames;
+      type = iter->body.type;
+      size = iter->body.size;
+      iter = lv2_atom_sequence_next(iter);
     }
     if (to > samples_done) {
       while (samples_done + max_samples < to) { // subdividimos el buffer en porciones de tamaño max_sample
@@ -250,9 +251,8 @@ void RaffoSynth::run(uint32_t sample_count) {
       samples_done = to;
     }
 
-    if (ev) {
-      if (ev->type == midi_type)
-        static_cast<RaffoSynth*>(this)->handle_midi(ev->size, event_data);
+    if (iter) {
+      static_cast<RaffoSynth*>(this)->handle_midi(size, event_data);
     }
   }
 

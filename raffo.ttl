@@ -2,12 +2,11 @@
 @prefix doap: <http://usefulinc.com/ns/doap#> .
 @prefix lv2:  <http://lv2plug.in/ns/lv2core#> .
 @prefix midi: <http://lv2plug.in/ns/ext/midi#> .
+@prefix urid: <http://lv2plug.in/ns/ext/urid#> .
 @prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix urid: <http://lv2plug.in/ns/ext/urid#> .
-@prefix ev:   <http://lv2plug.in/ns/ext/event#> .
-@prefix ll: <http://ll-plugins.nongnu.org/lv2/namespace#>.
-@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix ll:   <http://ll-plugins.nongnu.org/lv2/namespace#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
 
 @prefix pprops: <http://lv2plug.in/ns/ext/port-props#>.
 
@@ -28,9 +27,10 @@
 	guiext:ui <http://example.org/raffo/gui>;
 
 	lv2:port [
-		a ev:EventPort, lv2:InputPort;
+		a atom:AtomPort, lv2:InputPort;
+		atom:bufferType atom:Sequence;
+		atom:supports midi:MidiEvent;
 		lv2:index 0;
-		ev:supportsEvent <http://lv2plug.in/ns/ext/midi#MidiEvent>;
 		lv2:symbol "midi";
 		lv2:name "MIDI";
   ],
