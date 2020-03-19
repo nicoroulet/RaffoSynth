@@ -67,7 +67,6 @@ RaffoSynth::RaffoSynth(double rate):
 , output("data/oscasm_256.out")
 #endif
   {
-      //midi_type = Parent::uri_to_id(LV2_EVENT_URI, "http://lv2plug.in/ns/ext/midi#MidiEvent"); 
   }
 
 void RaffoSynth::activate()
@@ -253,8 +252,7 @@ void RaffoSynth::run(uint32_t sample_count) {
     }
 
     if (iter) {
-      //if (type == midi_type)
-        static_cast<RaffoSynth*>(this)->handle_midi(size, event_data);
+      static_cast<RaffoSynth*>(this)->handle_midi(size, event_data);
     }
   }
 
