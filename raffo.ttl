@@ -7,6 +7,9 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix ll:   <http://ll-plugins.nongnu.org/lv2/namespace#>.
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix lv2pg:   <http://lv2plug.in/ns/ext/port-groups#> .
+
+@prefix raffosynth_lv2: <http://github.com/nicoroulet/RaffoSynth#> .
 
 @prefix pprops: <http://lv2plug.in/ns/ext/port-props#>.
 
@@ -45,10 +48,12 @@
 	a lv2:ControlPort, lv2:InputPort;
 	lv2:index 2;
 	lv2:symbol "volume";
+    
 	lv2:name "Volume";
 	lv2:minimum 0; 
 	lv2:maximum 10.01;
 	lv2:default 7;
+    lv2pg:group raffosynth_lv2:CTRL_FLT;
   ],
   
   
@@ -66,6 +71,7 @@
 	lv2:scalePoint [ rdf:value 1; rdfs:label "triangle" ];
 	lv2:scalePoint [ rdf:value 2; rdfs:label "square" ];
 	lv2:scalePoint [ rdf:value 3; rdfs:label "pulse" ];
+    lv2pg:group raffosynth_lv2:CTRL_OSC0;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -81,6 +87,7 @@
 	lv2:scalePoint [ rdf:value 1; rdfs:label "triangle" ];
 	lv2:scalePoint [ rdf:value 2; rdfs:label "square" ];
 	lv2:scalePoint [ rdf:value 3; rdfs:label "pulse" ];
+    lv2pg:group raffosynth_lv2:CTRL_OSC1;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -96,6 +103,7 @@
 	lv2:scalePoint [ rdf:value 1; rdfs:label "triangle" ];
 	lv2:scalePoint [ rdf:value 2; rdfs:label "square" ];
 	lv2:scalePoint [ rdf:value 3; rdfs:label "pulse" ];
+    lv2pg:group raffosynth_lv2:CTRL_OSC2;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -111,6 +119,7 @@
 	lv2:scalePoint [ rdf:value 1; rdfs:label "triangle" ];
 	lv2:scalePoint [ rdf:value 2; rdfs:label "square" ];
 	lv2:scalePoint [ rdf:value 3; rdfs:label "pulse" ];
+    lv2pg:group raffosynth_lv2:CTRL_OSC3;
   ],
   
   
@@ -129,6 +138,7 @@
 	lv2:scalePoint [ rdf:value 3; rdfs:label "8'" ];
 	lv2:scalePoint [ rdf:value 4; rdfs:label "4'" ];
 	lv2:scalePoint [ rdf:value 5; rdfs:label "2'" ];
+    lv2pg:group raffosynth_lv2:CTRL_OSC0;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -145,6 +155,7 @@
 	lv2:scalePoint [ rdf:value 3; rdfs:label "8'" ];
 	lv2:scalePoint [ rdf:value 4; rdfs:label "4'" ];
 	lv2:scalePoint [ rdf:value 5; rdfs:label "2'" ];
+    lv2pg:group raffosynth_lv2:CTRL_OSC1;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -161,6 +172,7 @@
 	lv2:scalePoint [ rdf:value 3; rdfs:label "8'" ];
 	lv2:scalePoint [ rdf:value 4; rdfs:label "4'" ];
 	lv2:scalePoint [ rdf:value 5; rdfs:label "2'" ];
+    lv2pg:group raffosynth_lv2:CTRL_OSC2;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -177,6 +189,7 @@
 	lv2:scalePoint [ rdf:value 3; rdfs:label "8'" ];
 	lv2:scalePoint [ rdf:value 4; rdfs:label "4'" ];
 	lv2:scalePoint [ rdf:value 5; rdfs:label "2'" ];
+    lv2pg:group raffosynth_lv2:CTRL_OSC3;
   ],
   
   
@@ -188,6 +201,7 @@
 	lv2:minimum 0; 
 	lv2:maximum 10.01;
 	lv2:default 7;
+    lv2pg:group raffosynth_lv2:CTRL_OSC0;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -197,6 +211,7 @@
 	lv2:minimum 0; 
 	lv2:maximum 10.01;
 	lv2:default 5;
+    lv2pg:group raffosynth_lv2:CTRL_OSC1;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -206,6 +221,7 @@
 	lv2:minimum 0; 
 	lv2:maximum 10.01;
 	lv2:default 4;
+    lv2pg:group raffosynth_lv2:CTRL_OSC2;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -215,6 +231,7 @@
 	lv2:minimum 0; 
 	lv2:maximum 10.01;
 	lv2:default 7;
+    lv2pg:group raffosynth_lv2:CTRL_OSC3;
   ],
   
   
@@ -226,6 +243,7 @@
 	lv2:minimum 10; 
 	lv2:maximum 1000.01;
 	lv2:default 0;
+    lv2pg:group raffosynth_lv2:ENV_AMP;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -235,6 +253,7 @@
 	lv2:minimum 0; 
 	lv2:maximum 1000.01;
 	lv2:default 200;
+    lv2pg:group raffosynth_lv2:ENV_AMP;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -244,6 +263,7 @@
 	lv2:minimum 0; 
 	lv2:maximum 1.01;
 	lv2:default 0.8;
+    lv2pg:group raffosynth_lv2:ENV_AMP;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -253,6 +273,7 @@
 	lv2:minimum 0.01; 
 	lv2:maximum 1.01;
 	lv2:default 0.4;
+    lv2pg:group raffosynth_lv2:ENV_AMP;
   ],
   
   
@@ -265,6 +286,7 @@
 	lv2:maximum 10000.02;
 	lv2:default 3000;
 	#lv2:PortProperty pprops:logarithmic;
+    lv2pg:group raffosynth_lv2:CTRL_FLT;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -274,6 +296,7 @@
 	lv2:minimum 0; 
 	lv2:maximum 1000.01;
 	lv2:default 200;
+    lv2pg:group raffosynth_lv2:ENV_FLT;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -283,6 +306,7 @@
 	lv2:minimum 0; 
 	lv2:maximum 1000.01;
 	lv2:default 400;
+    lv2pg:group raffosynth_lv2:ENV_FLT;
   ],  
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -292,6 +316,7 @@
 	lv2:minimum 0; 
 	lv2:maximum 1.01;
 	lv2:default 0.7;
+    lv2pg:group raffosynth_lv2:ENV_FLT;
   ],  
   
   
@@ -303,6 +328,7 @@
 	lv2:minimum 0; 
 	lv2:maximum 10.01;
 	lv2:default 1;
+    lv2pg:group raffosynth_lv2:CTRL_FLT;
   ],
       [
 	a lv2:ControlPort, lv2:InputPort;
@@ -316,6 +342,7 @@
 	lv2:maximum 2;
 	lv2:scalePoint [ rdf:value 0; rdfs:label "Off" ];
 	lv2:scalePoint [ rdf:value 1; rdfs:label "On" ];
+    lv2pg:group raffosynth_lv2:MIX_OSC;
   ],  
   
   [
@@ -330,6 +357,7 @@
 	lv2:maximum 2;
 	lv2:scalePoint [ rdf:value 0; rdfs:label "Off" ];
 	lv2:scalePoint [ rdf:value 1; rdfs:label "On" ];
+    lv2pg:group raffosynth_lv2:MIX_OSC;
   ],  
 
   [
@@ -344,6 +372,7 @@
 	lv2:maximum 2;
 	lv2:scalePoint [ rdf:value 0; rdfs:label "Off" ];
 	lv2:scalePoint [ rdf:value 1; rdfs:label "On" ];
+    lv2pg:group raffosynth_lv2:MIX_OSC;
   ],  
 
   [
@@ -358,6 +387,7 @@
 	lv2:maximum 2;
 	lv2:scalePoint [ rdf:value 0; rdfs:label "Off" ];
 	lv2:scalePoint [ rdf:value 1; rdfs:label "On" ];
+    lv2pg:group raffosynth_lv2:MIX_OSC;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -367,6 +397,7 @@
 	lv2:minimum 0; 
 	lv2:maximum 10.01;
 	lv2:default 3;
+    lv2pg:group raffosynth_lv2:CTRL_FLT;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -376,6 +407,7 @@
 	lv2:minimum -12.0; 
 	lv2:maximum 12.01;
 	lv2:default 0;
+    lv2pg:group raffosynth_lv2:CTRL_OSC0;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -385,6 +417,7 @@
 	lv2:minimum -12.0; 
 	lv2:maximum 12.01;
 	lv2:default -0.02;
+    lv2pg:group raffosynth_lv2:CTRL_OSC1;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -394,6 +427,7 @@
 	lv2:minimum -12.0; 
 	lv2:maximum 12.01;
 	lv2:default 0.02;
+    lv2pg:group raffosynth_lv2:CTRL_OSC2;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -403,6 +437,7 @@
 	lv2:minimum -12.0; 
 	lv2:maximum 12.01;
 	lv2:default 0;
+    lv2pg:group raffosynth_lv2:CTRL_OSC3;
   ],
   [
 	a lv2:ControlPort, lv2:InputPort;
@@ -412,4 +447,40 @@
 	lv2:minimum 0; 
 	lv2:maximum 1.01;
 	lv2:default 0.5;
+    lv2pg:group raffosynth_lv2:ENV_FLT;
   ].
+  
+raffosynth_lv2:CTRL_OSC0
+   a lv2pg:InputGroup;
+   lv2:name "Osc0 - ctrl" ;
+   lv2:symbol "OSC0" .
+raffosynth_lv2:CTRL_OSC1
+   a lv2pg:InputGroup;
+   lv2:name "Osc1 - ctrl" ;
+   lv2:symbol "OSC1" .
+raffosynth_lv2:CTRL_OSC2
+   a lv2pg:InputGroup;
+   lv2:name "Osc2 - ctrl" ;
+   lv2:symbol "OSC2" .
+raffosynth_lv2:CTRL_OSC3
+   a lv2pg:InputGroup;
+   lv2:name "Osc3 - ctrl" ;
+   lv2:symbol "OSC3" .
+raffosynth_lv2:ENV_FLT
+   a lv2pg:InputGroup;
+   lv2:name "Filter - env" ;
+   lv2:symbol "ENVF" .
+raffosynth_lv2:CTRL_FLT
+   a lv2pg:InputGroup;
+   lv2:name "Filter & vol - ctrl" ;
+   lv2:symbol "FLT" .
+raffosynth_lv2:MIX_OSC
+   a lv2pg:InputGroup;
+   lv2:name "Osc - Mix" ;
+   lv2:symbol "MIX" .
+raffosynth_lv2:ENV_AMP
+   a lv2pg:InputGroup;
+   lv2:name "Amp - env" ;
+   lv2:symbol "AMP" .
+
+
